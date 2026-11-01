@@ -30,17 +30,20 @@ export async function createPhysicsWorld(map: MapDef, stepSeconds: number): Prom
   await RAPIER.init();
   const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
   world.timestep = stepSeconds;
-  // Ground + map + invisible boundary walls (quay edge, perimeter).
-  world.createCollider(RAPIER.ColliderDesc.cuboid(80, 0.5, 80).setTranslation(0, -0.5, 0));
+  // Ground + map + invisible boundary walls (quay edge, perimeter), sized from the map bounds:
+  // a fixed 160 m slab let players fall off larger maps (Porto Vecchio is 280 × 300 m).
+  const { minX, maxX, minZ, maxZ } = map.bounds;
+  const cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
+  const hx = Math.max(80, (maxX - minX) / 2 + 10), hz = Math.max(80, (maxZ - minZ) / 2 + 10);
+  world.createCollider(RAPIER.ColliderDesc.cuboid(hx, 0.5, hz).setTranslation(cx, -0.5, cz));
   for (const b of map.boxes) {
     world.createCollider(RAPIER.ColliderDesc.cuboid(b.s.x / 2, b.s.y / 2, b.s.z / 2).setTranslation(b.c.x, b.c.y, b.c.z));
   }
-  const { minX, maxX, minZ, maxZ } = map.bounds;
-  const wall = (x: number, z: number, hx: number, hz: number): void => {
-    world.createCollider(RAPIER.ColliderDesc.cuboid(hx, 10, hz).setTranslation(x, 10, z));
+  const wall = (x: number, z: number, wx: number, wz: number): void => {
+    world.createCollider(RAPIER.ColliderDesc.cuboid(wx, 10, wz).setTranslation(x, 10, z));
   };
-  wall(minX - 0.5, 0, 0.5, 100); wall(maxX + 0.5, 0, 0.5, 100);
-  wall(0, minZ - 0.5, 100, 0.5); wall(0, maxZ + 0.5, 100, 0.5);
+  wall(minX - 0.5, cz, 0.5, hz); wall(maxX + 0.5, cz, 0.5, hz);
+  wall(cx, minZ - 0.5, hx, 0.5); wall(cx, maxZ + 0.5, hx, 0.5);
 
   const kcc = world.createCharacterController(0.02);
   kcc.setUp({ x: 0, y: 1, z: 0 });

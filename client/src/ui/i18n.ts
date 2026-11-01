@@ -1,6 +1,6 @@
 /** Minimal i18n (it default, en fallback). Locales are listed in shared PENDING_DEFAULTS. */
 const IT = {
-  'menu.subtitle': 'Offline contro bot · Banchina Est',
+  'menu.subtitle': 'Offline contro bot',
   'menu.play': 'Gioca (offline vs bot)',
   'menu.passRequired': 'Daily Pass richiesto',
   'menu.passInfo': 'Tutto il gioco, incluso l\'offline contro i bot, richiede un Daily Pass attivo.',
@@ -15,6 +15,7 @@ const IT = {
   'btn.interact': 'AZIONE', 'btn.tapout': 'ARRENDITI', 'btn.grenade': 'GRANATA',
   'hud.grenades': 'Granate', 'hud.reviving': 'Rianimazione…', 'hud.revived': '{a} rianima {b}',
   'menu.online': 'Gioca online', 'menu.connecting': 'Connessione…', 'online.err.pass': 'Online: serve un Daily Pass attivo sul wallet collegato.', 'online.signing': 'Conferma la firma nel wallet…', 'online.err.wallet': 'Firma del wallet non completata.', 'online.err.proof': 'Prova del wallet non valida o scaduta: riprova.', 'online.err.unavail': 'Verifica del Daily Pass non disponibile: riprova tra poco.', 'online.err.expired': 'Il Daily Pass è scaduto: sei uscito dalla stanza.', 'online.err.busy': 'Troppi tentativi: attendi un minuto.', 'online.err.full': 'Stanza piena o non disponibile.', 'online.err.socket': 'Server non raggiungibile.', 'online.err.version': 'Versione del server non compatibile.', 'online.reconnecting': 'Connessione persa: riconnessione…', 'online.lost': 'Connessione al server persa.',
+  'menu.map': 'Mappa', 'map.portoArdesia': 'Porto di Ardesia — Banchina Est', 'map.portoVecchio': 'Trieste — Porto Vecchio', 'map.offlineOnly': 'Solo offline contro i bot.',
   'menu.class': 'Classe', 'class.0': 'Soldato', 'class.1': 'Medico', 'class.2': 'Geniere', 'class.3': 'Operatore', 'class.4': 'Incursore',
   'class.0.d': '3 granate', 'class.1.d': 'rianima i compagni · rigenera fino a 100 · 1 granata', 'class.2.d': 'pianta e disinnesca più in fretta · 2 granate', 'class.3.d': '4 granate', 'class.4.d': 'più fiato nello scatto · 1 granata',
   'hud.attack': 'ATTACCO', 'hud.defend': 'DIFESA',
@@ -33,7 +34,7 @@ const IT = {
 
 type Key = keyof typeof IT;
 const EN: Record<Key, string> = {
-  'menu.subtitle': 'Offline vs bots · East Quay',
+  'menu.subtitle': 'Offline vs bots',
   'menu.play': 'Play (offline vs bots)',
   'menu.passRequired': 'Daily Pass required',
   'menu.passInfo': 'The whole game, including offline vs bots, requires an active Daily Pass.',
@@ -47,6 +48,7 @@ const EN: Record<Key, string> = {
   'btn.interact': 'ACTION', 'btn.tapout': 'TAP OUT', 'btn.grenade': 'GRENADE',
   'hud.grenades': 'Grenades', 'hud.reviving': 'Reviving…', 'hud.revived': '{a} revives {b}',
   'menu.online': 'Play online', 'menu.connecting': 'Connecting…', 'online.err.pass': 'Online needs an active Daily Pass on the connected wallet.', 'online.signing': 'Confirm the signature in your wallet…', 'online.err.wallet': 'Wallet signature not completed.', 'online.err.proof': 'Wallet proof invalid or expired: try again.', 'online.err.unavail': 'Daily Pass check unavailable: try again shortly.', 'online.err.expired': 'Your Daily Pass expired: you left the room.', 'online.err.busy': 'Too many attempts: wait a minute.', 'online.err.full': 'Room full or unavailable.', 'online.err.socket': 'Server unreachable.', 'online.err.version': 'Incompatible server version.', 'online.reconnecting': 'Connection lost: reconnecting…', 'online.lost': 'Lost connection to the server.',
+  'menu.map': 'Map', 'map.portoArdesia': 'Port of Ardesia — East Quay', 'map.portoVecchio': 'Trieste — Porto Vecchio', 'map.offlineOnly': 'Offline against bots only.',
   'menu.class': 'Class', 'class.0': 'Soldier', 'class.1': 'Medic', 'class.2': 'Engineer', 'class.3': 'Field Ops', 'class.4': 'Covert Ops',
   'class.0.d': '3 grenades', 'class.1.d': 'revives teammates · regenerates to 100 · 1 grenade', 'class.2.d': 'plants and defuses faster · 2 grenades', 'class.3.d': '4 grenades', 'class.4.d': 'more sprint stamina · 1 grenade',
   'hud.attack': 'ATTACK', 'hud.defend': 'DEFENCE',

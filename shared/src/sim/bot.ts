@@ -180,6 +180,14 @@ export function thinkBot(m: Match, self: Combatant, b: BotBrain, dt: number): vo
     }
     case 'patrol':
     default: {
+      if (!m.map.patrols.length) {
+        // No patrol loops on this map: hold near the objective instead of failing.
+        const obj = m.map.objective;
+        const hold = v3(obj.x + (self.id % 2 ? 3 : -3), 0, obj.z + (self.id % 3) - 1);
+        moveGoal = distXZ(self.pos, hold) > 1.5 ? hold : null;
+        inp.wantStance = moveGoal ? 'stand' : 'crouch';
+        break;
+      }
       const loop = m.map.patrols[b.patrolLoop % m.map.patrols.length]!;
       const node = m.map.waypoints[loop[b.patrolIdx % loop.length]!]!;
       if (b.waitTimer > 0) { b.waitTimer -= dt; break; }

@@ -2,6 +2,7 @@ import './ui/style.css';
 import { GAME_LOGO_PATH, GAME_TAGLINE, GAME_TITLE, ONLINE } from '@shared/config';
 import { createRenderer } from './render/renderer';
 import { Game } from './game/game';
+import { DEFAULT_MAP, MAPS, isMapId, type MapId } from './game/mapLoader';
 import { t } from './ui/i18n';
 import { installAutomation } from './dev/automation';
 
@@ -44,6 +45,16 @@ const readClass = (): PlayerClass => { try { const v = Number(localStorage.getIt
 let chosenClass = readClass();
 let classDirty = false;
 
+/** Chosen map (remembered; changing it reloads the page because the map is built at start-up). */
+const MAP_KEY = 'seekstrike.map';
+const readMap = (): MapId => {
+  const fromUrl = params.get('map');
+  if (isMapId(fromUrl)) return fromUrl;
+  try { const v = localStorage.getItem(MAP_KEY); return isMapId(v) ? v : DEFAULT_MAP; } catch { return DEFAULT_MAP; }
+};
+const chosenMap = readMap();
+const mapInfo = MAPS[chosenMap];
+
 const menu = document.createElement('div');
 menu.className = 'menu';
 menu.innerHTML = `<div class="card">
@@ -55,10 +66,12 @@ menu.innerHTML = `<div class="card">
   <div class="gate"><b>${t('menu.passRequired')}</b><br>${t('menu.passInfo')}</div>
   <div data-pass></div>
   <div data-dev></div>
+  <label class="classpick">${t('menu.map')} <select data-map>${(Object.keys(MAPS) as MapId[]).map((id) => `<option value="${id}"${id === chosenMap ? ' selected' : ''}>${t(MAPS[id].nameKey as never)}</option>`).join('')}</select></label>
+  <div class="small classdesc">${mapInfo.online ? '' : t('map.offlineOnly')}${mapInfo.attribution ? ` ${esc(mapInfo.attribution)}` : ''}</div>
   <label class="classpick">${t('menu.class')} <select data-class>${[0, 1, 2, 3, 4].map((i) => `<option value="${i}"${i === chosenClass ? ' selected' : ''}>${t(`class.${i}` as never)}</option>`).join('')}</select></label>
   <div class="small classdesc" data-classdesc></div>
   <button data-play disabled>${t('menu.play')}</button>
-  ${onlineBase ? `<button data-online disabled>${t('menu.online')}</button>` : ''}
+  ${onlineBase && mapInfo.online ? `<button data-online disabled>${t('menu.online')}</button>` : ''}
   <div class="load" data-load></div>
   <p>${isTouch ? t('menu.controlsTouch') : t('menu.controlsDesktop')}</p>
   <div data-sponsor></div>
@@ -66,6 +79,14 @@ menu.innerHTML = `<div class="card">
 document.body.appendChild(menu);
 const playBtn = menu.querySelector<HTMLButtonElement>('[data-play]')!;
 const classSel = menu.querySelector<HTMLSelectElement>('[data-class]')!;
+menu.querySelector<HTMLSelectElement>('[data-map]')!.addEventListener('change', (e) => {
+  const v = (e.target as HTMLSelectElement).value;
+  if (!isMapId(v) || v === chosenMap) return;
+  try { localStorage.setItem(MAP_KEY, v); } catch { /* storage unavailable */ }
+  const url = new URL(location.href);
+  url.searchParams.set('map', v);
+  location.replace(url.toString());
+});
 const classDesc = menu.querySelector<HTMLElement>('[data-classdesc]')!;
 const showClassDesc = (): void => { classDesc.textContent = t(`class.${classSel.value}.d` as never); };
 showClassDesc();
@@ -98,7 +119,7 @@ void passApp.then((p) => { menu.querySelector('[data-pass]')!.replaceWith(p.pane
 const renderer = createRenderer(app);
 const game = new Game(renderer, app, {
   seed: Number(params.get('seed') ?? 0) || (Date.now() >>> 0),
-  attackers: 5, defenders: 6, touch: isTouch, debug: params.has('debug'), playerClass: chosenClass,
+  attackers: 5, defenders: 6, touch: isTouch, debug: params.has('debug'), playerClass: chosenClass, mapId: chosenMap,
 });
 const resize = (): void => game.resize(app.clientWidth, app.clientHeight);
 window.addEventListener('resize', resize);

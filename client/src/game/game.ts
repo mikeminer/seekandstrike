@@ -10,8 +10,8 @@ import { clamp, distXZ, type Vec3 } from '@shared/sim/vec';
 import { createPhysicsWorld, type PhysicsWorld } from '../physics/world';
 import { setRendererPixelRatio } from '../render/renderer';
 import { AssetStore } from '../render/assets';
-import { buildMapView, buildMapViewFromGlb, buildObjectiveProp } from '../render/mapView';
-import { loadBanchinaEst } from './mapLoader';
+import { buildArchitectureMapView, buildMapView, buildMapViewFromGlb, buildObjectiveProp } from '../render/mapView';
+import { DEFAULT_MAP, MAPS, loadPipelineMap, type MapId } from './mapLoader';
 import type { MapDef } from '@shared/map/types';
 import type { PlayerClass } from '@shared/sim/etClasses';
 import { OnlineSession, type SessionOptions } from '../online/session';
@@ -31,7 +31,7 @@ import { DEFAULT_QUALITY_TIERS, createQualityGovernor, observeFrame, type Govern
 /** Sun direction measured from the bundled HDRI's brightest texel (elevation ~48°). */
 const SUN_DIR = new THREE.Vector3(0.555, 0.743, 0.374).normalize();
 
-export interface GameOptions { seed: number; attackers: number; defenders: number; touch: boolean; debug: boolean; playerClass?: PlayerClass; }
+export interface GameOptions { seed: number; attackers: number; defenders: number; touch: boolean; debug: boolean; playerClass?: PlayerClass; mapId?: MapId; }
 
 export class Game {
   readonly scene = new THREE.Scene();
@@ -106,9 +106,16 @@ export class Game {
     this.sun.shadow.radius = 3;
     this.scene.add(this.sun, this.sun.target);
 
-    const loaded = await loadBanchinaEst(import.meta.env.BASE_URL);
+    const loaded = await loadPipelineMap(import.meta.env.BASE_URL, this.opts.mapId ?? DEFAULT_MAP);
     this.map = loaded.map;
-    this.scene.add(loaded.glb ? buildMapViewFromGlb(loaded.glb, this.map, this.assets) : buildMapView(this.map, this.assets));
+    if (loaded.glb && MAPS[loaded.id].architecture) {
+      const view = buildArchitectureMapView(loaded.glb, this.map, loaded.simBoxes, this.assets);
+      this.scene.add(view.group);
+      this.hostEl.querySelector<HTMLElement>('.blockout')?.remove(); // finished buildings, not box geometry
+      if (this.opts.debug) console.info('architecture triangles', view.triangles);
+    } else {
+      this.scene.add(loaded.glb ? buildMapViewFromGlb(loaded.glb, this.map, this.assets) : buildMapView(this.map, this.assets));
+    }
     this.objective = buildObjectiveProp(this.assets);
     const o = this.map.objective;
     this.objective.root.position.set(o.x, o.y + 0.06 /* console top + half charge height */, o.z);

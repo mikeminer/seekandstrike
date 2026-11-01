@@ -3,6 +3,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { BoxLook, MapBox, MapDef } from '@shared/map/types';
 import type { AssetStore, TextureSetId } from './assets';
+import { compileArchitecture, SLOTS, type Slot } from './architecture/compile';
+import { massFromSimBoxes, planBuildings } from './architecture/plan';
 
 /**
  * Builds the static map from MapDef boxes: one merged geometry per look (few draw calls),
@@ -91,9 +93,6 @@ export function buildMapViewFromGlb(gltf: GLTF, map: MapDef, assets: AssetStore)
   const group = new THREE.Group();
   group.name = 'map';
   gltf.scene.updateMatrixWorld(true);
-  const v = new THREE.Vector3();
-  const n = new THREE.Vector3();
-  const normalMat = new THREE.Matrix3();
   gltf.scene.traverse((o) => {
     const src = o as THREE.Mesh;
     if (!src.isMesh) return;
@@ -101,7 +100,23 @@ export function buildMapViewFromGlb(gltf: GLTF, map: MapDef, assets: AssetStore)
     const name = (srcMat?.name ?? '') as BoxLook | 'quayStone' | 'water';
     if (name === 'quayStone' || name === 'water' || !(name in LOOKS)) return;
     const look = name as BoxLook;
-    const spec = LOOKS[look];
+    const mesh = new THREE.Mesh(assets.track(worldGeometryFromGlb(src, LOOKS[look].tile)), material(assets, LOOKS[look]));
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.name = `map-${look}`;
+    group.add(mesh);
+  });
+  addSurroundings(group, map, assets);
+  return group;
+}
+
+/** Pipeline GLB mesh → world-space geometry with UVs box-projected in metres / tile. */
+function worldGeometryFromGlb(src: THREE.Mesh, tile: number): THREE.BufferGeometry {
+  const v = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  const normalMat = new THREE.Matrix3();
+  {
+    const spec = { tile };
     const pa = src.geometry.getAttribute('position');
     const na = src.geometry.getAttribute('normal');
     const pos = new Float32Array(pa.count * 3);
@@ -125,14 +140,70 @@ export function buildMapViewFromGlb(gltf: GLTF, map: MapDef, assets: AssetStore)
     geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
     geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
     if (src.geometry.index) geo.setIndex(Array.from(src.geometry.index.array));
-    const mesh = new THREE.Mesh(assets.track(geo), material(assets, spec));
-    mesh.castShadow = true;
+    return geo;
+  }
+}
+
+/** Ground, roads, rails and seabed of an OSM pipeline map (the GLB's own non-building surfaces). */
+const GROUND_LOOKS: Record<string, LookSpec> = {
+  quayStone: { set: 'Concrete034', tile: 3, tint: 0xa39b8f },
+  asphalt: { set: 'Asphalt031', tile: 4, tint: 0xa8a8a8 },
+  concreteDark: { set: 'Concrete034', tile: 4, tint: 0x4d5354 },
+  rail: { set: 'MetalPlates006', tile: 1.5, tint: 0x5e5249, metalness: 0.6 },
+};
+
+/**
+ * Pipeline map whose buildings are rebuilt procedurally (DevFridge Game Builder v1.10.0,
+ * landscapes-and-architecture → threejs-procedural-architecture). The GLB supplies ground, roads,
+ * rails, sea and the box props; its blockout buildings (plaster/brick) are replaced by façades
+ * compiled from the same collision boxes, in four draw calls.
+ */
+export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Parameters<typeof massFromSimBoxes>[0], assets: AssetStore): { group: THREE.Group; triangles: Record<string, number> } {
+  const group = new THREE.Group();
+  group.name = 'map';
+  gltf.scene.updateMatrixWorld(true);
+  gltf.scene.traverse((o) => {
+    const src = o as THREE.Mesh;
+    if (!src.isMesh) return;
+    const srcMat = Array.isArray(src.material) ? src.material[0] : src.material;
+    const name = srcMat?.name ?? '';
+    if (name === 'plaster' || name === 'brick') return; // replaced by the procedural buildings below
+    if (name === 'water') {
+      const water = new THREE.Mesh(assets.track(worldGeometryFromGlb(src, 8)), assets.track(new THREE.MeshStandardMaterial({
+        color: 0x1d3a40, roughness: 0.06, metalness: 0, envMapIntensity: 1.1,
+        normalMap: assets.set('Concrete034').normalMap, normalScale: new THREE.Vector2(0.15, 0.15),
+      })));
+      water.name = 'water';
+      group.add(water);
+      return;
+    }
+    const spec = GROUND_LOOKS[name] ?? (name in LOOKS ? LOOKS[name as BoxLook] : null);
+    if (!spec) return;
+    const mesh = new THREE.Mesh(assets.track(worldGeometryFromGlb(src, spec.tile)), material(assets, spec));
+    mesh.castShadow = !(name in GROUND_LOOKS);
     mesh.receiveShadow = true;
-    mesh.name = `map-${look}`;
+    mesh.name = `map-${name}`;
     group.add(mesh);
   });
-  addSurroundings(group, map, assets);
-  return group;
+  const compiled = compileArchitecture(planBuildings(massFromSimBoxes(simBoxes)));
+  const stoneSet = assets.set('Concrete034');
+  const slotMaterial: Record<Slot, THREE.MeshStandardMaterial> = {
+    wall: new THREE.MeshStandardMaterial({ map: stoneSet.map, normalMap: stoneSet.normalMap, roughnessMap: stoneSet.roughnessMap, vertexColors: true, roughness: 1 }),
+    stone: new THREE.MeshStandardMaterial({ map: stoneSet.map, normalMap: stoneSet.normalMap, roughnessMap: stoneSet.roughnessMap, vertexColors: true, roughness: 0.95 }),
+    window: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.12, metalness: 0, envMapIntensity: 1.3 }),
+    roof: new THREE.MeshStandardMaterial({ map: stoneSet.map, normalMap: stoneSet.normalMap, vertexColors: true, roughness: 1 }),
+  };
+  for (const slot of SLOTS) {
+    const geo = compiled.geometries[slot];
+    if (!geo) continue;
+    const mesh = new THREE.Mesh(assets.track(geo), assets.track(slotMaterial[slot]));
+    // Only the mass (walls, roofs) casts shadows: thin trims and glass would add shadow-pass cost for little gain.
+    mesh.castShadow = slot === 'wall' || slot === 'roof';
+    mesh.receiveShadow = true;
+    mesh.name = `architecture-${slot}`;
+    group.add(mesh);
+  }
+  return { group, triangles: compiled.triangles };
 }
 
 /** Asphalt yard, lane paint, quay wall, sea and breakwater around the solids. */

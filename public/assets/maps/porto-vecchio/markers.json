@@ -1,0 +1,5125 @@
+{
+ "format": "seek-strike-markers",
+ "version": 1,
+ "map": "Porto_Vecchio_Trieste",
+ "id": "porto-vecchio-ts",
+ "bounds": {
+  "minX": -140,
+  "maxX": 140,
+  "minZ": -150,
+  "maxZ": 150
+ },
+ "waterLevel": -1.2,
+ "environment": {
+  "sun": {
+   "azimuthDeg": 235,
+   "elevationDeg": 22
+  },
+  "fog": {
+   "color": "#c3c9cc",
+   "near": 80,
+   "far": 320
+  },
+  "timeOfDay": "late-afternoon"
+ },
+ "patrols": null,
+ "counts": {
+  "spawnAttack": 6,
+  "spawnDefend": 6,
+  "objective": 1,
+  "cover": 58,
+  "nav": 173,
+  "trigger": 0,
+  "light": 0
+ },
+ "markers": [
+  {
+   "kind": "spawn",
+   "name": "spawn_attack_0",
+   "position": [
+    3,
+    0,
+    136
+   ],
+   "yaw": 0.0756,
+   "team": 0,
+   "tags": [
+    "attack"
+   ],
+   "props": {
+    "team": 0
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_attack_1",
+   "position": [
+    0.5,
+    0,
+    136
+   ],
+   "yaw": 0.0568,
+   "team": 0,
+   "tags": [
+    "attack"
+   ],
+   "props": {
+    "team": 0
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_attack_2",
+   "position": [
+    6.5,
+    0,
+    136
+   ],
+   "yaw": 0.1019,
+   "team": 0,
+   "tags": [
+    "attack"
+   ],
+   "props": {
+    "team": 0
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_attack_3",
+   "position": [
+    2.5,
+    0,
+    139
+   ],
+   "yaw": 0.0703,
+   "team": 0,
+   "tags": [
+    "attack"
+   ],
+   "props": {
+    "team": 0
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_attack_4",
+   "position": [
+    6,
+    0,
+    139.5
+   ],
+   "yaw": 0.0956,
+   "team": 0,
+   "tags": [
+    "attack"
+   ],
+   "props": {
+    "team": 0
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_attack_5",
+   "position": [
+    3,
+    0,
+    133.5
+   ],
+   "yaw": 0.0771,
+   "team": 0,
+   "tags": [
+    "attack"
+   ],
+   "props": {
+    "team": 0
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_defend_0",
+   "position": [
+    -3.5,
+    0,
+    -134
+   ],
+   "yaw": 3.1162,
+   "team": 1,
+   "tags": [
+    "defend"
+   ],
+   "props": {
+    "team": 1
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_defend_1",
+   "position": [
+    -6.5,
+    0,
+    -133.5
+   ],
+   "yaw": 3.138,
+   "team": 1,
+   "tags": [
+    "defend"
+   ],
+   "props": {
+    "team": 1
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_defend_2",
+   "position": [
+    -1,
+    0,
+    -134
+   ],
+   "yaw": 3.0981,
+   "team": 1,
+   "tags": [
+    "defend"
+   ],
+   "props": {
+    "team": 1
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_defend_3",
+   "position": [
+    -4,
+    0,
+    -131
+   ],
+   "yaw": 3.1194,
+   "team": 1,
+   "tags": [
+    "defend"
+   ],
+   "props": {
+    "team": 1
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_defend_4",
+   "position": [
+    -0.5,
+    0,
+    -130.5
+   ],
+   "yaw": 3.0933,
+   "team": 1,
+   "tags": [
+    "defend"
+   ],
+   "props": {
+    "team": 1
+   }
+  },
+  {
+   "kind": "spawn",
+   "name": "spawn_defend_5",
+   "position": [
+    -3.5,
+    0,
+    -136.5
+   ],
+   "yaw": 3.1167,
+   "team": 1,
+   "tags": [
+    "defend"
+   ],
+   "props": {
+    "team": 1
+   }
+  },
+  {
+   "kind": "objective",
+   "name": "objective_charge_console",
+   "position": [
+    -7,
+    1.1,
+    4.1
+   ],
+   "yaw": 0,
+   "tags": [
+    "plant",
+    "defuse"
+   ],
+   "props": {
+    "kind": "plant",
+    "radius": 1.6,
+    "fuseSeconds": 30
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_00",
+   "position": [
+    68.368,
+    0,
+    24.586
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_0"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_01",
+   "position": [
+    68.368,
+    0,
+    28.226
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_0"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_02",
+   "position": [
+    119.13,
+    0,
+    121.748
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_1"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_03",
+   "position": [
+    122.77,
+    0,
+    121.748
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_1"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_04",
+   "position": [
+    101.435,
+    0,
+    21.887
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_2"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_05",
+   "position": [
+    101.435,
+    0,
+    25.527
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_2"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_06",
+   "position": [
+    41.568,
+    0,
+    -4.424
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_3"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_07",
+   "position": [
+    45.208,
+    0,
+    -4.424
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_3"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_08",
+   "position": [
+    0.2,
+    0,
+    84.405
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_4"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_09",
+   "position": [
+    0.2,
+    0,
+    88.045
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_4"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_10",
+   "position": [
+    75.768,
+    0,
+    44.126
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_5"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_11",
+   "position": [
+    79.408,
+    0,
+    44.126
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_5"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_12",
+   "position": [
+    76.411,
+    0,
+    -83.455
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_6"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_13",
+   "position": [
+    76.411,
+    0,
+    -79.815
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_6"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_14",
+   "position": [
+    96.75,
+    0,
+    114.964
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_7"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_15",
+   "position": [
+    96.75,
+    0,
+    118.604
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_7"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_16",
+   "position": [
+    70.587,
+    0,
+    87.194
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_8"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_17",
+   "position": [
+    70.587,
+    0,
+    90.834
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_8"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_18",
+   "position": [
+    42.56,
+    0,
+    41.445
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_9"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_19",
+   "position": [
+    46.2,
+    0,
+    41.445
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_9"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_20",
+   "position": [
+    118.67,
+    0,
+    -93.529
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_10"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_21",
+   "position": [
+    122.31,
+    0,
+    -93.529
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_10"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_22",
+   "position": [
+    101.929,
+    0,
+    -45.928
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_11"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_23",
+   "position": [
+    105.569,
+    0,
+    -45.928
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_11"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_24",
+   "position": [
+    36.713,
+    0,
+    135.797
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_12"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_25",
+   "position": [
+    40.353,
+    0,
+    135.797
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_12"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_26",
+   "position": [
+    -10.807,
+    0,
+    85.911
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_13"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_27",
+   "position": [
+    -10.807,
+    0,
+    89.551
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_13"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_28",
+   "position": [
+    107.383,
+    0,
+    107.799
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_14"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_29",
+   "position": [
+    111.023,
+    0,
+    107.799
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_14"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_30",
+   "position": [
+    -40.259,
+    0,
+    105.394
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_15"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_31",
+   "position": [
+    -40.259,
+    0,
+    109.034
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_15"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_32",
+   "position": [
+    97.112,
+    0,
+    -6.782
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_16"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_33",
+   "position": [
+    100.752,
+    0,
+    -6.782
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_16"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_34",
+   "position": [
+    -48.614,
+    0,
+    -56.059
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_17"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_35",
+   "position": [
+    -48.614,
+    0,
+    -52.419
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_17"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_36",
+   "position": [
+    45.499,
+    0,
+    114.762
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_18"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_37",
+   "position": [
+    49.139,
+    0,
+    114.762
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_18"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_38",
+   "position": [
+    63.096,
+    0,
+    -111.087
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_19"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_39",
+   "position": [
+    63.096,
+    0,
+    -107.447
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_19"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_40",
+   "position": [
+    -5.036,
+    0,
+    101.979
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_20"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_41",
+   "position": [
+    -1.396,
+    0,
+    101.979
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_20"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_42",
+   "position": [
+    74.134,
+    0,
+    -135.58
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_21"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_43",
+   "position": [
+    77.774,
+    0,
+    -135.58
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_21"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_44",
+   "position": [
+    -126.864,
+    0,
+    109.624
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_22"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_45",
+   "position": [
+    -123.224,
+    0,
+    109.624
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_22"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_46",
+   "position": [
+    104.145,
+    0,
+    36.972
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_23"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_47",
+   "position": [
+    104.145,
+    0,
+    40.612
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_23"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_48",
+   "position": [
+    118.06,
+    0,
+    15.874
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_24"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_49",
+   "position": [
+    118.06,
+    0,
+    19.514
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_24"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_50",
+   "position": [
+    -15.55,
+    0,
+    77.116
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_25"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_51",
+   "position": [
+    -15.55,
+    0,
+    80.756
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "high",
+    "against": "container_25"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_52",
+   "position": [
+    -0.14,
+    0,
+    11.266
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "low"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_53",
+   "position": [
+    -5.3,
+    0,
+    11.878
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "low"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_54",
+   "position": [
+    -12.66,
+    0,
+    9.612
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "low"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_55",
+   "position": [
+    -14.36,
+    0,
+    1.734
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "low"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_56",
+   "position": [
+    -8.7,
+    0,
+    -3.878
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "low"
+   }
+  },
+  {
+   "kind": "cover",
+   "name": "cover_57",
+   "position": [
+    -4.84,
+    0,
+    -6.112
+   ],
+   "yaw": 0,
+   "props": {
+    "height": "low"
+   }
+  },
+  {
+   "kind": "nav",
+   "name": "nav_000",
+   "position": [
+    -58,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_001",
+   "position": [
+    -42,
+    0,
+    -138
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_002",
+   "position": [
+    -22,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_003",
+   "position": [
+    -4,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_004",
+   "position": [
+    34,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_005",
+   "position": [
+    50,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_006",
+   "position": [
+    68,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_007",
+   "position": [
+    86,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_008",
+   "position": [
+    104,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_009",
+   "position": [
+    122,
+    0,
+    -140
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_010",
+   "position": [
+    -58,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_011",
+   "position": [
+    -42,
+    0,
+    -120
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_012",
+   "position": [
+    -20,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_013",
+   "position": [
+    -4.5,
+    0,
+    -121.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_014",
+   "position": [
+    33,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_015",
+   "position": [
+    50,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_016",
+   "position": [
+    68,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_017",
+   "position": [
+    86,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_018",
+   "position": [
+    104,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_019",
+   "position": [
+    122,
+    0,
+    -122
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_020",
+   "position": [
+    -58,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_021",
+   "position": [
+    -42,
+    0,
+    -102
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_022",
+   "position": [
+    -22,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_023",
+   "position": [
+    -4,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_024",
+   "position": [
+    33,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_025",
+   "position": [
+    50,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_026",
+   "position": [
+    68,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_027",
+   "position": [
+    86,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_028",
+   "position": [
+    104,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_029",
+   "position": [
+    122,
+    0,
+    -104
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_030",
+   "position": [
+    -58,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_031",
+   "position": [
+    -42,
+    0,
+    -84
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_032",
+   "position": [
+    -21,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_033",
+   "position": [
+    -4,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_034",
+   "position": [
+    33,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_035",
+   "position": [
+    50,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_036",
+   "position": [
+    68,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_037",
+   "position": [
+    86,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_038",
+   "position": [
+    104,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_039",
+   "position": [
+    122,
+    0,
+    -86
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_040",
+   "position": [
+    -58,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_041",
+   "position": [
+    -40,
+    0,
+    -65
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_042",
+   "position": [
+    -22,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_043",
+   "position": [
+    -5.5,
+    0,
+    -66.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_044",
+   "position": [
+    33,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_045",
+   "position": [
+    50,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_046",
+   "position": [
+    68,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_047",
+   "position": [
+    86,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_048",
+   "position": [
+    104,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_049",
+   "position": [
+    122,
+    0,
+    -68
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_050",
+   "position": [
+    -58,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_051",
+   "position": [
+    -42,
+    0,
+    -52
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_052",
+   "position": [
+    -22,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_053",
+   "position": [
+    -5.5,
+    0,
+    -48.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_054",
+   "position": [
+    33,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_055",
+   "position": [
+    50,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_056",
+   "position": [
+    68,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_057",
+   "position": [
+    86,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_058",
+   "position": [
+    102.5,
+    0,
+    -51.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_059",
+   "position": [
+    122,
+    0,
+    -50
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_060",
+   "position": [
+    -58,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_061",
+   "position": [
+    -43.5,
+    0,
+    -30
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_062",
+   "position": [
+    -21,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_063",
+   "position": [
+    -4,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_064",
+   "position": [
+    33,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_065",
+   "position": [
+    50,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_066",
+   "position": [
+    68,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_067",
+   "position": [
+    86,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_068",
+   "position": [
+    104,
+    0,
+    -32
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_069",
+   "position": [
+    121.5,
+    0,
+    -32.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_070",
+   "position": [
+    -58,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_071",
+   "position": [
+    -43.5,
+    0,
+    -12
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_072",
+   "position": [
+    -22,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_073",
+   "position": [
+    -4,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_074",
+   "position": [
+    33,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_075",
+   "position": [
+    50,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_076",
+   "position": [
+    68,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_077",
+   "position": [
+    88,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_078",
+   "position": [
+    104,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_079",
+   "position": [
+    122,
+    0,
+    -14
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_080",
+   "position": [
+    -58,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_081",
+   "position": [
+    -43.5,
+    0,
+    6
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_082",
+   "position": [
+    -22,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_083",
+   "position": [
+    33,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_084",
+   "position": [
+    50,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_085",
+   "position": [
+    68,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_086",
+   "position": [
+    87,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_087",
+   "position": [
+    104,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_088",
+   "position": [
+    122,
+    0,
+    4
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_089",
+   "position": [
+    -58,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_090",
+   "position": [
+    -43.5,
+    0,
+    24
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_091",
+   "position": [
+    -22,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_092",
+   "position": [
+    -4,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_093",
+   "position": [
+    32,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_094",
+   "position": [
+    50,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_095",
+   "position": [
+    68,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_096",
+   "position": [
+    86,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_097",
+   "position": [
+    102,
+    0,
+    20
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_098",
+   "position": [
+    122,
+    0,
+    22
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_099",
+   "position": [
+    -58,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_100",
+   "position": [
+    -44,
+    0,
+    43
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_101",
+   "position": [
+    -22,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_102",
+   "position": [
+    -4,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_103",
+   "position": [
+    32,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_104",
+   "position": [
+    50,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_105",
+   "position": [
+    68,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_106",
+   "position": [
+    86,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_107",
+   "position": [
+    104,
+    0,
+    42
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_108",
+   "position": [
+    122,
+    0,
+    40
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_109",
+   "position": [
+    -130,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_110",
+   "position": [
+    -112,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_111",
+   "position": [
+    -94,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_112",
+   "position": [
+    -76,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_113",
+   "position": [
+    -58,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_114",
+   "position": [
+    -44,
+    0,
+    61
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_115",
+   "position": [
+    -22,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_116",
+   "position": [
+    -5.5,
+    0,
+    59.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_117",
+   "position": [
+    32,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_118",
+   "position": [
+    50,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_119",
+   "position": [
+    66,
+    0,
+    54.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_120",
+   "position": [
+    86,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_121",
+   "position": [
+    104,
+    0,
+    59
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_122",
+   "position": [
+    124,
+    0,
+    58
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_123",
+   "position": [
+    -57,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_124",
+   "position": [
+    -44,
+    0,
+    79
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_125",
+   "position": [
+    -22,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_126",
+   "position": [
+    -4,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_127",
+   "position": [
+    14,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_128",
+   "position": [
+    32,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_129",
+   "position": [
+    50,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_130",
+   "position": [
+    68,
+    0,
+    80
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_131",
+   "position": [
+    87,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_132",
+   "position": [
+    104,
+    0,
+    76
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_133",
+   "position": [
+    120.5,
+    0,
+    77.5
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_134",
+   "position": [
+    -130,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_135",
+   "position": [
+    -112,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_136",
+   "position": [
+    -94,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_137",
+   "position": [
+    -76,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_138",
+   "position": [
+    -58,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_139",
+   "position": [
+    -40,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_140",
+   "position": [
+    -22,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_141",
+   "position": [
+    -4,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_142",
+   "position": [
+    14,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_143",
+   "position": [
+    32,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_144",
+   "position": [
+    50,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_145",
+   "position": [
+    68,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_146",
+   "position": [
+    86,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_147",
+   "position": [
+    104,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_148",
+   "position": [
+    122,
+    0,
+    94
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_149",
+   "position": [
+    -130,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_150",
+   "position": [
+    -112,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_151",
+   "position": [
+    -94,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_152",
+   "position": [
+    -76,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_153",
+   "position": [
+    -58,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_154",
+   "position": [
+    -40,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_155",
+   "position": [
+    -22,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_156",
+   "position": [
+    -4,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_157",
+   "position": [
+    14,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_158",
+   "position": [
+    32,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_159",
+   "position": [
+    51,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_160",
+   "position": [
+    68,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_161",
+   "position": [
+    86,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_162",
+   "position": [
+    104,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_163",
+   "position": [
+    122,
+    0,
+    112
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_164",
+   "position": [
+    -130,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_165",
+   "position": [
+    -112,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_166",
+   "position": [
+    0,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_167",
+   "position": [
+    14,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_168",
+   "position": [
+    33,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_169",
+   "position": [
+    50,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_170",
+   "position": [
+    88,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_171",
+   "position": [
+    104,
+    0,
+    130
+   ],
+   "yaw": 0
+  },
+  {
+   "kind": "nav",
+   "name": "nav_172",
+   "position": [
+    122,
+    0,
+    130
+   ],
+   "yaw": 0
+  }
+ ],
+ "waypointGraph": {
+  "nodes": [
+   "nav_000",
+   "nav_001",
+   "nav_002",
+   "nav_003",
+   "nav_004",
+   "nav_005",
+   "nav_006",
+   "nav_007",
+   "nav_008",
+   "nav_009",
+   "nav_010",
+   "nav_011",
+   "nav_012",
+   "nav_013",
+   "nav_014",
+   "nav_015",
+   "nav_016",
+   "nav_017",
+   "nav_018",
+   "nav_019",
+   "nav_020",
+   "nav_021",
+   "nav_022",
+   "nav_023",
+   "nav_024",
+   "nav_025",
+   "nav_026",
+   "nav_027",
+   "nav_028",
+   "nav_029",
+   "nav_030",
+   "nav_031",
+   "nav_032",
+   "nav_033",
+   "nav_034",
+   "nav_035",
+   "nav_036",
+   "nav_037",
+   "nav_038",
+   "nav_039",
+   "nav_040",
+   "nav_041",
+   "nav_042",
+   "nav_043",
+   "nav_044",
+   "nav_045",
+   "nav_046",
+   "nav_047",
+   "nav_048",
+   "nav_049",
+   "nav_050",
+   "nav_051",
+   "nav_052",
+   "nav_053",
+   "nav_054",
+   "nav_055",
+   "nav_056",
+   "nav_057",
+   "nav_058",
+   "nav_059",
+   "nav_060",
+   "nav_061",
+   "nav_062",
+   "nav_063",
+   "nav_064",
+   "nav_065",
+   "nav_066",
+   "nav_067",
+   "nav_068",
+   "nav_069",
+   "nav_070",
+   "nav_071",
+   "nav_072",
+   "nav_073",
+   "nav_074",
+   "nav_075",
+   "nav_076",
+   "nav_077",
+   "nav_078",
+   "nav_079",
+   "nav_080",
+   "nav_081",
+   "nav_082",
+   "nav_083",
+   "nav_084",
+   "nav_085",
+   "nav_086",
+   "nav_087",
+   "nav_088",
+   "nav_089",
+   "nav_090",
+   "nav_091",
+   "nav_092",
+   "nav_093",
+   "nav_094",
+   "nav_095",
+   "nav_096",
+   "nav_097",
+   "nav_098",
+   "nav_099",
+   "nav_100",
+   "nav_101",
+   "nav_102",
+   "nav_103",
+   "nav_104",
+   "nav_105",
+   "nav_106",
+   "nav_107",
+   "nav_108",
+   "nav_109",
+   "nav_110",
+   "nav_111",
+   "nav_112",
+   "nav_113",
+   "nav_114",
+   "nav_115",
+   "nav_116",
+   "nav_117",
+   "nav_118",
+   "nav_119",
+   "nav_120",
+   "nav_121",
+   "nav_122",
+   "nav_123",
+   "nav_124",
+   "nav_125",
+   "nav_126",
+   "nav_127",
+   "nav_128",
+   "nav_129",
+   "nav_130",
+   "nav_131",
+   "nav_132",
+   "nav_133",
+   "nav_134",
+   "nav_135",
+   "nav_136",
+   "nav_137",
+   "nav_138",
+   "nav_139",
+   "nav_140",
+   "nav_141",
+   "nav_142",
+   "nav_143",
+   "nav_144",
+   "nav_145",
+   "nav_146",
+   "nav_147",
+   "nav_148",
+   "nav_149",
+   "nav_150",
+   "nav_151",
+   "nav_152",
+   "nav_153",
+   "nav_154",
+   "nav_155",
+   "nav_156",
+   "nav_157",
+   "nav_158",
+   "nav_159",
+   "nav_160",
+   "nav_161",
+   "nav_162",
+   "nav_163",
+   "nav_164",
+   "nav_165",
+   "nav_166",
+   "nav_167",
+   "nav_168",
+   "nav_169",
+   "nav_170",
+   "nav_171",
+   "nav_172"
+  ],
+  "edges": [
+   [
+    0,
+    1,
+    16.12
+   ],
+   [
+    0,
+    10,
+    18
+   ],
+   [
+    0,
+    11,
+    25.61
+   ],
+   [
+    1,
+    10,
+    22.63
+   ],
+   [
+    1,
+    11,
+    18
+   ],
+   [
+    2,
+    3,
+    18
+   ],
+   [
+    2,
+    12,
+    18.11
+   ],
+   [
+    2,
+    13,
+    25.47
+   ],
+   [
+    3,
+    12,
+    24.08
+   ],
+   [
+    3,
+    13,
+    18.51
+   ],
+   [
+    4,
+    5,
+    16
+   ],
+   [
+    4,
+    14,
+    18.03
+   ],
+   [
+    4,
+    15,
+    24.08
+   ],
+   [
+    5,
+    6,
+    18
+   ],
+   [
+    5,
+    14,
+    24.76
+   ],
+   [
+    5,
+    15,
+    18
+   ],
+   [
+    5,
+    16,
+    25.46
+   ],
+   [
+    6,
+    15,
+    25.46
+   ],
+   [
+    6,
+    16,
+    18
+   ],
+   [
+    7,
+    8,
+    18
+   ],
+   [
+    7,
+    17,
+    18
+   ],
+   [
+    7,
+    18,
+    25.46
+   ],
+   [
+    8,
+    9,
+    18
+   ],
+   [
+    8,
+    17,
+    25.46
+   ],
+   [
+    8,
+    18,
+    18
+   ],
+   [
+    8,
+    19,
+    25.46
+   ],
+   [
+    9,
+    18,
+    25.46
+   ],
+   [
+    9,
+    19,
+    18
+   ],
+   [
+    10,
+    11,
+    16.12
+   ],
+   [
+    10,
+    20,
+    18
+   ],
+   [
+    10,
+    21,
+    25.61
+   ],
+   [
+    11,
+    20,
+    22.63
+   ],
+   [
+    11,
+    21,
+    18
+   ],
+   [
+    12,
+    13,
+    15.51
+   ],
+   [
+    12,
+    22,
+    18.11
+   ],
+   [
+    12,
+    23,
+    24.08
+   ],
+   [
+    13,
+    22,
+    24.75
+   ],
+   [
+    13,
+    23,
+    17.51
+   ],
+   [
+    14,
+    15,
+    17
+   ],
+   [
+    14,
+    24,
+    18
+   ],
+   [
+    14,
+    25,
+    24.76
+   ],
+   [
+    15,
+    16,
+    18
+   ],
+   [
+    15,
+    24,
+    24.76
+   ],
+   [
+    15,
+    25,
+    18
+   ],
+   [
+    16,
+    17,
+    18
+   ],
+   [
+    16,
+    25,
+    25.46
+   ],
+   [
+    16,
+    26,
+    18
+   ],
+   [
+    16,
+    27,
+    25.46
+   ],
+   [
+    17,
+    18,
+    18
+   ],
+   [
+    17,
+    26,
+    25.46
+   ],
+   [
+    17,
+    27,
+    18
+   ],
+   [
+    17,
+    28,
+    25.46
+   ],
+   [
+    18,
+    19,
+    18
+   ],
+   [
+    18,
+    27,
+    25.46
+   ],
+   [
+    18,
+    28,
+    18
+   ],
+   [
+    18,
+    29,
+    25.46
+   ],
+   [
+    19,
+    28,
+    25.46
+   ],
+   [
+    19,
+    29,
+    18
+   ],
+   [
+    20,
+    21,
+    16.12
+   ],
+   [
+    20,
+    30,
+    18
+   ],
+   [
+    20,
+    31,
+    25.61
+   ],
+   [
+    21,
+    30,
+    22.63
+   ],
+   [
+    21,
+    31,
+    18
+   ],
+   [
+    22,
+    23,
+    18
+   ],
+   [
+    22,
+    32,
+    18.03
+   ],
+   [
+    22,
+    33,
+    25.46
+   ],
+   [
+    23,
+    32,
+    24.76
+   ],
+   [
+    23,
+    33,
+    18
+   ],
+   [
+    24,
+    25,
+    17
+   ],
+   [
+    24,
+    34,
+    18
+   ],
+   [
+    24,
+    35,
+    24.76
+   ],
+   [
+    25,
+    26,
+    18
+   ],
+   [
+    25,
+    34,
+    24.76
+   ],
+   [
+    25,
+    35,
+    18
+   ],
+   [
+    25,
+    36,
+    25.46
+   ],
+   [
+    26,
+    27,
+    18
+   ],
+   [
+    26,
+    35,
+    25.46
+   ],
+   [
+    26,
+    36,
+    18
+   ],
+   [
+    26,
+    37,
+    25.46
+   ],
+   [
+    27,
+    28,
+    18
+   ],
+   [
+    27,
+    36,
+    25.46
+   ],
+   [
+    27,
+    37,
+    18
+   ],
+   [
+    27,
+    38,
+    25.46
+   ],
+   [
+    28,
+    29,
+    18
+   ],
+   [
+    28,
+    37,
+    25.46
+   ],
+   [
+    28,
+    38,
+    18
+   ],
+   [
+    28,
+    39,
+    25.46
+   ],
+   [
+    29,
+    38,
+    25.46
+   ],
+   [
+    29,
+    39,
+    18
+   ],
+   [
+    30,
+    31,
+    16.12
+   ],
+   [
+    30,
+    40,
+    18
+   ],
+   [
+    31,
+    40,
+    22.63
+   ],
+   [
+    32,
+    33,
+    17
+   ],
+   [
+    32,
+    42,
+    18.03
+   ],
+   [
+    32,
+    43,
+    24.91
+   ],
+   [
+    33,
+    42,
+    25.46
+   ],
+   [
+    33,
+    43,
+    19.56
+   ],
+   [
+    34,
+    35,
+    17
+   ],
+   [
+    34,
+    44,
+    18
+   ],
+   [
+    34,
+    45,
+    24.76
+   ],
+   [
+    35,
+    36,
+    18
+   ],
+   [
+    35,
+    44,
+    24.76
+   ],
+   [
+    35,
+    45,
+    18
+   ],
+   [
+    35,
+    46,
+    25.46
+   ],
+   [
+    36,
+    37,
+    18
+   ],
+   [
+    36,
+    45,
+    25.46
+   ],
+   [
+    36,
+    46,
+    18
+   ],
+   [
+    37,
+    38,
+    18
+   ],
+   [
+    37,
+    46,
+    25.46
+   ],
+   [
+    37,
+    47,
+    18
+   ],
+   [
+    37,
+    48,
+    25.46
+   ],
+   [
+    38,
+    39,
+    18
+   ],
+   [
+    38,
+    47,
+    25.46
+   ],
+   [
+    38,
+    48,
+    18
+   ],
+   [
+    38,
+    49,
+    25.46
+   ],
+   [
+    39,
+    48,
+    25.46
+   ],
+   [
+    39,
+    49,
+    18
+   ],
+   [
+    40,
+    41,
+    18.25
+   ],
+   [
+    40,
+    50,
+    18
+   ],
+   [
+    41,
+    51,
+    13.15
+   ],
+   [
+    42,
+    43,
+    16.57
+   ],
+   [
+    42,
+    52,
+    18
+   ],
+   [
+    42,
+    53,
+    25.54
+   ],
+   [
+    43,
+    52,
+    23.33
+   ],
+   [
+    43,
+    53,
+    18
+   ],
+   [
+    44,
+    45,
+    17
+   ],
+   [
+    44,
+    54,
+    18
+   ],
+   [
+    44,
+    55,
+    24.76
+   ],
+   [
+    45,
+    46,
+    18
+   ],
+   [
+    45,
+    54,
+    24.76
+   ],
+   [
+    45,
+    55,
+    18
+   ],
+   [
+    45,
+    56,
+    25.46
+   ],
+   [
+    46,
+    47,
+    18
+   ],
+   [
+    46,
+    55,
+    25.46
+   ],
+   [
+    46,
+    56,
+    18
+   ],
+   [
+    46,
+    57,
+    25.46
+   ],
+   [
+    47,
+    48,
+    18
+   ],
+   [
+    47,
+    56,
+    25.46
+   ],
+   [
+    47,
+    57,
+    18
+   ],
+   [
+    47,
+    58,
+    23.33
+   ],
+   [
+    48,
+    49,
+    18
+   ],
+   [
+    48,
+    57,
+    25.46
+   ],
+   [
+    48,
+    58,
+    16.57
+   ],
+   [
+    48,
+    59,
+    25.46
+   ],
+   [
+    49,
+    58,
+    25.54
+   ],
+   [
+    49,
+    59,
+    18
+   ],
+   [
+    50,
+    51,
+    16.12
+   ],
+   [
+    50,
+    60,
+    18
+   ],
+   [
+    50,
+    61,
+    24.7
+   ],
+   [
+    51,
+    60,
+    25.61
+   ],
+   [
+    52,
+    53,
+    16.57
+   ],
+   [
+    52,
+    62,
+    18.03
+   ],
+   [
+    52,
+    63,
+    25.46
+   ],
+   [
+    53,
+    62,
+    22.64
+   ],
+   [
+    53,
+    63,
+    16.57
+   ],
+   [
+    54,
+    55,
+    17
+   ],
+   [
+    54,
+    64,
+    18
+   ],
+   [
+    54,
+    65,
+    24.76
+   ],
+   [
+    55,
+    56,
+    18
+   ],
+   [
+    55,
+    64,
+    24.76
+   ],
+   [
+    55,
+    65,
+    18
+   ],
+   [
+    55,
+    66,
+    25.46
+   ],
+   [
+    56,
+    57,
+    18
+   ],
+   [
+    56,
+    65,
+    25.46
+   ],
+   [
+    56,
+    66,
+    18
+   ],
+   [
+    56,
+    67,
+    25.46
+   ],
+   [
+    57,
+    58,
+    16.57
+   ],
+   [
+    57,
+    66,
+    25.46
+   ],
+   [
+    57,
+    67,
+    18
+   ],
+   [
+    57,
+    68,
+    25.46
+   ],
+   [
+    58,
+    59,
+    19.56
+   ],
+   [
+    58,
+    67,
+    25.54
+   ],
+   [
+    59,
+    68,
+    25.46
+   ],
+   [
+    59,
+    69,
+    17.51
+   ],
+   [
+    60,
+    61,
+    14.64
+   ],
+   [
+    60,
+    70,
+    18
+   ],
+   [
+    60,
+    71,
+    24.7
+   ],
+   [
+    61,
+    70,
+    21.59
+   ],
+   [
+    61,
+    71,
+    18
+   ],
+   [
+    62,
+    63,
+    17
+   ],
+   [
+    62,
+    72,
+    18.03
+   ],
+   [
+    62,
+    73,
+    24.76
+   ],
+   [
+    63,
+    72,
+    25.46
+   ],
+   [
+    63,
+    73,
+    18
+   ],
+   [
+    64,
+    65,
+    17
+   ],
+   [
+    64,
+    74,
+    18
+   ],
+   [
+    64,
+    75,
+    24.76
+   ],
+   [
+    65,
+    66,
+    18
+   ],
+   [
+    65,
+    74,
+    24.76
+   ],
+   [
+    65,
+    75,
+    18
+   ],
+   [
+    65,
+    76,
+    25.46
+   ],
+   [
+    66,
+    67,
+    18
+   ],
+   [
+    66,
+    75,
+    25.46
+   ],
+   [
+    66,
+    76,
+    18
+   ],
+   [
+    67,
+    68,
+    18
+   ],
+   [
+    67,
+    76,
+    25.46
+   ],
+   [
+    67,
+    77,
+    18.11
+   ],
+   [
+    67,
+    78,
+    25.46
+   ],
+   [
+    68,
+    69,
+    17.51
+   ],
+   [
+    68,
+    77,
+    24.08
+   ],
+   [
+    68,
+    78,
+    18
+   ],
+   [
+    68,
+    79,
+    25.46
+   ],
+   [
+    69,
+    78,
+    25.47
+   ],
+   [
+    70,
+    71,
+    14.64
+   ],
+   [
+    70,
+    80,
+    18
+   ],
+   [
+    70,
+    81,
+    24.7
+   ],
+   [
+    71,
+    80,
+    21.59
+   ],
+   [
+    71,
+    81,
+    18
+   ],
+   [
+    72,
+    73,
+    18
+   ],
+   [
+    72,
+    82,
+    18
+   ],
+   [
+    73,
+    82,
+    25.46
+   ],
+   [
+    74,
+    75,
+    17
+   ],
+   [
+    74,
+    83,
+    18
+   ],
+   [
+    75,
+    76,
+    18
+   ],
+   [
+    75,
+    84,
+    18
+   ],
+   [
+    75,
+    85,
+    25.46
+   ],
+   [
+    76,
+    84,
+    25.46
+   ],
+   [
+    76,
+    85,
+    18
+   ],
+   [
+    77,
+    78,
+    16
+   ],
+   [
+    77,
+    87,
+    24.08
+   ],
+   [
+    78,
+    79,
+    18
+   ],
+   [
+    78,
+    87,
+    18
+   ],
+   [
+    78,
+    88,
+    25.46
+   ],
+   [
+    79,
+    87,
+    25.46
+   ],
+   [
+    79,
+    88,
+    18
+   ],
+   [
+    80,
+    81,
+    14.64
+   ],
+   [
+    80,
+    89,
+    18
+   ],
+   [
+    80,
+    90,
+    24.7
+   ],
+   [
+    81,
+    89,
+    21.59
+   ],
+   [
+    81,
+    90,
+    18
+   ],
+   [
+    82,
+    91,
+    18
+   ],
+   [
+    82,
+    92,
+    25.46
+   ],
+   [
+    83,
+    84,
+    17
+   ],
+   [
+    83,
+    93,
+    18.03
+   ],
+   [
+    83,
+    94,
+    24.76
+   ],
+   [
+    84,
+    85,
+    18
+   ],
+   [
+    84,
+    93,
+    25.46
+   ],
+   [
+    84,
+    94,
+    18
+   ],
+   [
+    84,
+    95,
+    25.46
+   ],
+   [
+    85,
+    86,
+    19
+   ],
+   [
+    85,
+    94,
+    25.46
+   ],
+   [
+    85,
+    95,
+    18
+   ],
+   [
+    85,
+    96,
+    25.46
+   ],
+   [
+    86,
+    87,
+    17
+   ],
+   [
+    86,
+    95,
+    26.17
+   ],
+   [
+    86,
+    96,
+    18.03
+   ],
+   [
+    86,
+    97,
+    21.93
+   ],
+   [
+    87,
+    88,
+    18
+   ],
+   [
+    87,
+    96,
+    25.46
+   ],
+   [
+    87,
+    97,
+    16.12
+   ],
+   [
+    88,
+    97,
+    25.61
+   ],
+   [
+    88,
+    98,
+    18
+   ],
+   [
+    89,
+    90,
+    14.64
+   ],
+   [
+    89,
+    99,
+    18
+   ],
+   [
+    89,
+    100,
+    25.24
+   ],
+   [
+    90,
+    99,
+    21.59
+   ],
+   [
+    90,
+    100,
+    19.01
+   ],
+   [
+    91,
+    92,
+    18
+   ],
+   [
+    91,
+    101,
+    18
+   ],
+   [
+    91,
+    102,
+    25.46
+   ],
+   [
+    92,
+    101,
+    25.46
+   ],
+   [
+    92,
+    102,
+    18
+   ],
+   [
+    93,
+    94,
+    18
+   ],
+   [
+    93,
+    103,
+    18
+   ],
+   [
+    93,
+    104,
+    25.46
+   ],
+   [
+    94,
+    95,
+    18
+   ],
+   [
+    94,
+    103,
+    25.46
+   ],
+   [
+    94,
+    104,
+    18
+   ],
+   [
+    94,
+    105,
+    25.46
+   ],
+   [
+    95,
+    96,
+    18
+   ],
+   [
+    96,
+    97,
+    16.12
+   ],
+   [
+    96,
+    105,
+    25.46
+   ],
+   [
+    96,
+    106,
+    18
+   ],
+   [
+    97,
+    98,
+    20.1
+   ],
+   [
+    98,
+    108,
+    18
+   ],
+   [
+    99,
+    100,
+    14.32
+   ],
+   [
+    99,
+    112,
+    25.46
+   ],
+   [
+    99,
+    113,
+    18
+   ],
+   [
+    99,
+    114,
+    25.24
+   ],
+   [
+    100,
+    113,
+    20.52
+   ],
+   [
+    100,
+    114,
+    18
+   ],
+   [
+    101,
+    102,
+    18
+   ],
+   [
+    101,
+    115,
+    18
+   ],
+   [
+    101,
+    116,
+    25.54
+   ],
+   [
+    102,
+    115,
+    25.46
+   ],
+   [
+    103,
+    117,
+    18
+   ],
+   [
+    103,
+    118,
+    25.46
+   ],
+   [
+    104,
+    105,
+    18
+   ],
+   [
+    104,
+    118,
+    18
+   ],
+   [
+    104,
+    119,
+    21.59
+   ],
+   [
+    105,
+    106,
+    18
+   ],
+   [
+    105,
+    118,
+    25.46
+   ],
+   [
+    105,
+    119,
+    14.64
+   ],
+   [
+    105,
+    120,
+    25.46
+   ],
+   [
+    106,
+    107,
+    18.11
+   ],
+   [
+    106,
+    120,
+    18
+   ],
+   [
+    106,
+    121,
+    26.17
+   ],
+   [
+    107,
+    108,
+    18.11
+   ],
+   [
+    107,
+    120,
+    24.08
+   ],
+   [
+    107,
+    121,
+    17
+   ],
+   [
+    108,
+    122,
+    18.11
+   ],
+   [
+    109,
+    110,
+    18
+   ],
+   [
+    110,
+    111,
+    18
+   ],
+   [
+    111,
+    112,
+    18
+   ],
+   [
+    112,
+    113,
+    18
+   ],
+   [
+    113,
+    114,
+    14.32
+   ],
+   [
+    113,
+    124,
+    25.24
+   ],
+   [
+    114,
+    123,
+    19.85
+   ],
+   [
+    114,
+    124,
+    18
+   ],
+   [
+    115,
+    116,
+    16.57
+   ],
+   [
+    115,
+    125,
+    18
+   ],
+   [
+    115,
+    126,
+    25.46
+   ],
+   [
+    116,
+    125,
+    23.33
+   ],
+   [
+    116,
+    126,
+    16.57
+   ],
+   [
+    117,
+    118,
+    18
+   ],
+   [
+    117,
+    128,
+    18
+   ],
+   [
+    117,
+    129,
+    25.46
+   ],
+   [
+    118,
+    119,
+    16.38
+   ],
+   [
+    118,
+    128,
+    25.46
+   ],
+   [
+    118,
+    129,
+    18
+   ],
+   [
+    120,
+    121,
+    18.03
+   ],
+   [
+    120,
+    131,
+    18.03
+   ],
+   [
+    120,
+    132,
+    25.46
+   ],
+   [
+    121,
+    131,
+    24.04
+   ],
+   [
+    121,
+    132,
+    17
+   ],
+   [
+    123,
+    124,
+    13.34
+   ],
+   [
+    124,
+    138,
+    20.52
+   ],
+   [
+    125,
+    126,
+    18
+   ],
+   [
+    125,
+    140,
+    18
+   ],
+   [
+    126,
+    127,
+    18
+   ],
+   [
+    126,
+    141,
+    18
+   ],
+   [
+    126,
+    142,
+    25.46
+   ],
+   [
+    127,
+    128,
+    18
+   ],
+   [
+    127,
+    142,
+    18
+   ],
+   [
+    127,
+    143,
+    25.46
+   ],
+   [
+    128,
+    129,
+    18
+   ],
+   [
+    128,
+    142,
+    25.46
+   ],
+   [
+    128,
+    143,
+    18
+   ],
+   [
+    128,
+    144,
+    25.46
+   ],
+   [
+    129,
+    143,
+    25.46
+   ],
+   [
+    129,
+    144,
+    18
+   ],
+   [
+    129,
+    145,
+    25.46
+   ],
+   [
+    130,
+    144,
+    22.8
+   ],
+   [
+    130,
+    146,
+    22.8
+   ],
+   [
+    131,
+    132,
+    17
+   ],
+   [
+    131,
+    146,
+    18.03
+   ],
+   [
+    131,
+    147,
+    24.76
+   ],
+   [
+    132,
+    133,
+    16.57
+   ],
+   [
+    132,
+    146,
+    25.46
+   ],
+   [
+    132,
+    147,
+    18
+   ],
+   [
+    132,
+    148,
+    25.46
+   ],
+   [
+    133,
+    147,
+    23.33
+   ],
+   [
+    133,
+    148,
+    16.57
+   ],
+   [
+    134,
+    135,
+    18
+   ],
+   [
+    134,
+    149,
+    18
+   ],
+   [
+    134,
+    150,
+    25.46
+   ],
+   [
+    135,
+    136,
+    18
+   ],
+   [
+    135,
+    150,
+    18
+   ],
+   [
+    135,
+    151,
+    25.46
+   ],
+   [
+    136,
+    137,
+    18
+   ],
+   [
+    136,
+    150,
+    25.46
+   ],
+   [
+    136,
+    151,
+    18
+   ],
+   [
+    136,
+    152,
+    25.46
+   ],
+   [
+    137,
+    138,
+    18
+   ],
+   [
+    137,
+    151,
+    25.46
+   ],
+   [
+    137,
+    152,
+    18
+   ],
+   [
+    137,
+    153,
+    25.46
+   ],
+   [
+    138,
+    139,
+    18
+   ],
+   [
+    138,
+    152,
+    25.46
+   ],
+   [
+    138,
+    153,
+    18
+   ],
+   [
+    139,
+    140,
+    18
+   ],
+   [
+    139,
+    153,
+    25.46
+   ],
+   [
+    139,
+    155,
+    25.46
+   ],
+   [
+    140,
+    141,
+    18
+   ],
+   [
+    140,
+    155,
+    18
+   ],
+   [
+    140,
+    156,
+    25.46
+   ],
+   [
+    141,
+    142,
+    18
+   ],
+   [
+    141,
+    155,
+    25.46
+   ],
+   [
+    141,
+    157,
+    25.46
+   ],
+   [
+    142,
+    143,
+    18
+   ],
+   [
+    142,
+    156,
+    25.46
+   ],
+   [
+    142,
+    157,
+    18
+   ],
+   [
+    142,
+    158,
+    25.46
+   ],
+   [
+    143,
+    144,
+    18
+   ],
+   [
+    143,
+    157,
+    25.46
+   ],
+   [
+    143,
+    158,
+    18
+   ],
+   [
+    144,
+    145,
+    18
+   ],
+   [
+    144,
+    158,
+    25.46
+   ],
+   [
+    144,
+    159,
+    18.03
+   ],
+   [
+    144,
+    160,
+    25.46
+   ],
+   [
+    145,
+    146,
+    18
+   ],
+   [
+    145,
+    159,
+    24.76
+   ],
+   [
+    145,
+    160,
+    18
+   ],
+   [
+    145,
+    161,
+    25.46
+   ],
+   [
+    146,
+    147,
+    18
+   ],
+   [
+    146,
+    160,
+    25.46
+   ],
+   [
+    146,
+    161,
+    18
+   ],
+   [
+    146,
+    162,
+    25.46
+   ],
+   [
+    147,
+    148,
+    18
+   ],
+   [
+    147,
+    161,
+    25.46
+   ],
+   [
+    147,
+    162,
+    18
+   ],
+   [
+    147,
+    163,
+    25.46
+   ],
+   [
+    148,
+    163,
+    18
+   ],
+   [
+    149,
+    164,
+    18
+   ],
+   [
+    150,
+    151,
+    18
+   ],
+   [
+    150,
+    164,
+    25.46
+   ],
+   [
+    150,
+    165,
+    18
+   ],
+   [
+    151,
+    152,
+    18
+   ],
+   [
+    152,
+    153,
+    18
+   ],
+   [
+    153,
+    154,
+    18
+   ],
+   [
+    154,
+    155,
+    18
+   ],
+   [
+    155,
+    156,
+    18
+   ],
+   [
+    156,
+    157,
+    18
+   ],
+   [
+    157,
+    158,
+    18
+   ],
+   [
+    158,
+    168,
+    18.03
+   ],
+   [
+    158,
+    169,
+    25.46
+   ],
+   [
+    159,
+    160,
+    17
+   ],
+   [
+    159,
+    169,
+    18.03
+   ],
+   [
+    160,
+    161,
+    18
+   ],
+   [
+    161,
+    162,
+    18
+   ],
+   [
+    161,
+    171,
+    25.46
+   ],
+   [
+    162,
+    163,
+    18
+   ],
+   [
+    162,
+    171,
+    18
+   ],
+   [
+    162,
+    172,
+    25.46
+   ],
+   [
+    163,
+    171,
+    25.46
+   ],
+   [
+    164,
+    165,
+    18
+   ],
+   [
+    166,
+    167,
+    14
+   ],
+   [
+    168,
+    169,
+    17
+   ],
+   [
+    170,
+    171,
+    16
+   ],
+   [
+    171,
+    172,
+    18
+   ]
+  ]
+ }
+}

@@ -22,7 +22,8 @@ export interface PipelineMarkers {
   id: string;
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
   waterLevel: number;
-  patrols: number[][];
+  /** Bot patrol loops (waypoint indices); the pipeline writes null when the source map defines none. */
+  patrols: number[][] | null;
   markers: PipelineMarker[];
 }
 
@@ -66,6 +67,8 @@ export function mapDefFromPipeline(markers: PipelineMarkers, colliders: Pipeline
   const attack = spawnsOf(0), defend = spawnsOf(1);
   const objective = markers.markers.find((m) => m.kind === 'objective');
   if (!attack.length || !defend.length || !objective) throw new Error('map needs spawns for both teams and an objective');
+  const waypoints = markers.markers.filter((m) => m.kind === 'nav').sort(byIndex).map(pos);
+  const authored = (markers.patrols ?? []).filter((loop) => loop.length > 0 && loop.every((i) => i >= 0 && i < waypoints.length));
 
   return {
     id: markers.id,
@@ -75,9 +78,28 @@ export function mapDefFromPipeline(markers: PipelineMarkers, colliders: Pipeline
     spawns: [attack.map(pos), defend.map(pos)],
     spawnYaw: [attack[0]!.yaw, defend[0]!.yaw],
     objective: pos(objective),
-    waypoints: markers.markers.filter((m) => m.kind === 'nav').sort(byIndex).map(pos),
-    patrols: markers.patrols.map((p) => [...p]),
+    waypoints,
+    patrols: authored.length ? authored.map((p) => [...p]) : defaultPatrols(waypoints, pos(objective)),
     waterLevel: markers.waterLevel,
     navGrid: navgrid ? decodeNavGrid(navgrid) : undefined,
   };
+}
+
+/**
+ * Patrol loops for maps without authored ones: two rings of waypoints around the objective
+ * (nearest 6, then the next 6), each ordered by angle so bots walk a loop, not a zig-zag.
+ * Deterministic: depends only on waypoint positions.
+ */
+export function defaultPatrols(waypoints: readonly Vec3[], objective: Vec3): number[][] {
+  const byDistance = waypoints
+    .map((w, i) => ({ i, d: Math.hypot(w.x - objective.x, w.z - objective.z) }))
+    .sort((a, b) => a.d - b.d || a.i - b.i);
+  const loops: number[][] = [];
+  for (let start = 0; start < byDistance.length && loops.length < 2; start += 6) {
+    const ring = byDistance.slice(start, start + 6).map(({ i }) => i);
+    if (ring.length < 2) break;
+    const angle = (i: number): number => Math.atan2(waypoints[i]!.z - objective.z, waypoints[i]!.x - objective.x);
+    loops.push(ring.sort((a, b) => angle(a) - angle(b) || a - b));
+  }
+  return loops;
 }

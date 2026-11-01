@@ -5,19 +5,30 @@ import { mapDefFromPipeline, type PipelineColliders, type PipelineMarkers } from
 import type { NavGridJson } from '@shared/map/navgrid';
 import type { MapDef } from '@shared/map/types';
 
+/** Maps bundled under public/assets/maps/<id>/ by tools/map-pipeline. */
+export const MAPS = {
+  'banchina-est': { nameKey: 'map.portoArdesia', online: true, architecture: false, attribution: null },
+  'porto-vecchio': { nameKey: 'map.portoVecchio', online: false, architecture: true, attribution: '© OpenStreetMap contributors (ODbL)' },
+} as const;
+export type MapId = keyof typeof MAPS;
+export const DEFAULT_MAP: MapId = 'banchina-est';
+export const isMapId = (v: unknown): v is MapId => typeof v === 'string' && Object.hasOwn(MAPS, v);
+
 export interface LoadedMap {
+  id: MapId;
   map: MapDef;
   /** Pipeline `render.glb`; null when the hand-written fallback map is used. */
   glb: GLTF | null;
+  /** Collider boxes with their pipeline node names (buildings are `bld_…`), for procedural architecture. */
+  simBoxes: PipelineColliders['simBoxes'];
 }
 
 /**
- * Loads Banchina Est as baked by tools/map-pipeline (markers + colliders + navgrid + render.glb),
- * all bundled under assets/maps/. If anything fails the hand-written map is used so the game
- * still starts; the failure is logged.
+ * Loads a pipeline-baked map (markers + colliders + navgrid + render.glb). If anything fails the
+ * hand-written Banchina map is used so the game still starts; the failure is logged.
  */
-export async function loadBanchinaEst(base: string): Promise<LoadedMap> {
-  const dir = `${base}assets/maps/banchina-est/`;
+export async function loadPipelineMap(base: string, id: MapId): Promise<LoadedMap> {
+  const dir = `${base}assets/maps/${id}/`;
   try {
     const json = async <T>(name: string): Promise<T> => {
       const r = await fetch(dir + name);
@@ -30,9 +41,14 @@ export async function loadBanchinaEst(base: string): Promise<LoadedMap> {
       json<NavGridJson>('navgrid.json'),
       new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(`${dir}render.glb`),
     ]);
-    return { map: mapDefFromPipeline(markers, colliders, navgrid), glb };
+    const map = mapDefFromPipeline(markers, colliders, navgrid);
+    map.nameKey = MAPS[id].nameKey;
+    return { id, map, glb, simBoxes: colliders.simBoxes };
   } catch (err) {
-    console.warn('Map pipeline files unavailable, using the built-in map.', err);
-    return { map: PORTO_ARDESIA, glb: null };
+    console.warn(`Map pipeline files for ${id} unavailable, using the built-in map.`, err);
+    return { id: DEFAULT_MAP, map: PORTO_ARDESIA, glb: null, simBoxes: [] };
   }
 }
+
+/** Banchina Est (kept for existing callers and tests). */
+export const loadBanchinaEst = (base: string): Promise<LoadedMap> => loadPipelineMap(base, 'banchina-est');
