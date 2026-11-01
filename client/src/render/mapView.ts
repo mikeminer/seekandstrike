@@ -4,7 +4,7 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { BoxLook, MapBox, MapDef } from '@shared/map/types';
 import type { AssetStore, TextureSetId } from './assets';
 import { compileArchitecture, SLOTS, type Occlusion, type Slot } from './architecture/compile';
-import { massFromSimBoxes, planBuildings } from './architecture/plan';
+import { massFromSimBoxes, planBuildings, type BuildingPlan } from './architecture/plan';
 
 /**
  * Builds the static map from MapDef boxes: one merged geometry per look (few draw calls),
@@ -193,7 +193,7 @@ function addLightmapUv(geo: THREE.BufferGeometry, b: GroundAo['bounds']): void {
  * from the same collision boxes (four draw calls) and its flat water by the analytic sea (see
  * render/environment/sea.ts, added by the caller). Ground and façades carry baked sky occlusion.
  */
-export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Parameters<typeof massFromSimBoxes>[0], assets: AssetStore, opts: ArchitectureViewOptions = {}): { group: THREE.Group; triangles: Record<string, number> } {
+export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Parameters<typeof massFromSimBoxes>[0], assets: AssetStore, opts: ArchitectureViewOptions = {}): { group: THREE.Group; triangles: Record<string, number>; plans: BuildingPlan[] } {
   const group = new THREE.Group();
   group.name = 'map';
   gltf.scene.updateMatrixWorld(true);
@@ -220,7 +220,8 @@ export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Para
     group.add(mesh);
   });
   void map;
-  const compiled = compileArchitecture(planBuildings(massFromSimBoxes(simBoxes)), opts.occlusion);
+  const plans = planBuildings(massFromSimBoxes(simBoxes));
+  const compiled = compileArchitecture(plans, opts.occlusion);
   const stoneSet = assets.set('Concrete034');
   const slotMaterial: Record<Slot, THREE.MeshStandardMaterial> = {
     wall: new THREE.MeshStandardMaterial({ map: stoneSet.map, normalMap: stoneSet.normalMap, roughnessMap: stoneSet.roughnessMap, vertexColors: true, roughness: 1 }),
@@ -239,7 +240,7 @@ export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Para
     mesh.name = `architecture-${slot}`;
     group.add(mesh);
   }
-  return { group, triangles: compiled.triangles };
+  return { group, triangles: compiled.triangles, plans };
 }
 
 /** Asphalt yard, lane paint, quay wall, sea and breakwater around the solids. */

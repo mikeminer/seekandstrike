@@ -72,3 +72,28 @@ These are **not** Seeker measurements and do not satisfy the 50 FPS release gate
 
 - Busy spots with sky, sea, hills and baked light: **68–74 FPS, tier 0** (Banchina Est on the same machine: 66–77).
 - Load: architecture + façade occlusion **~1.06 s** on this PC; expect several seconds on a phone. If that is too slow on the Seeker, bake the façade occlusion offline like the ground.
+
+---
+
+# Third pass — vegetation (2026-11-01)
+
+## Skill files used
+
+| Skill file | Used for |
+| --- | --- |
+| `vendor/threejs-graphics-skills/threejs-procedural-vegetation/SKILL.md` | Build sequence (species table → queue growth → rings → section evolution → stratified/permuted children → leaves after topology → rooted wind) and its failure list (per-level budget, rooted leaf wind, seeds vary the individual not the species). |
+| `…/threejs-procedural-vegetation/references/structured-ash-growth-system.md` | Continuation + lateral children, `sectionLength = length / sections`, gnarliness `max(1, 1/√r)·g`, force step `strength / r`, taper `1 − 0.7·i/n`, child radius coupled to the parent section, interpolation from B toward A, double perpendicular cards with rounded normals, leaf-only wind weighted by the card's V. |
+| `…/examples/structured-ash-growth/tree-system.js` | Structure of the growth loop (read, not copied). |
+| `vendor/mengto-threejs-skills/threejs-landscape/SKILL.md` | Grass anchored near the camera (32 m tiles shown within 48 m), wind in the vertex shader, per-instance colour variation. |
+
+Intentional divergences from the ash contract (documented in `pine.ts`): our own *Pinus pinea* species table, needle-tuft cards drawn on a canvas instead of `ash.png`, real-distance bark V.
+
+## What was built (`client/src/render/vegetation/`)
+
+- `pine.ts` — stone pine grown as a hierarchy; ~2.4k triangles per tree; tests for budget, umbrella crown on a clear trunk, rooted cards, outward bark, seed behaviour. The first version broke the budget (5,830 triangles) and had a tall crown; the tests caught both and the species table was retuned.
+- `placement.ts` — deterministic placement with a **fairness rule**: vegetation is render-only and bots see through it, so nothing that could hide a crouching player grows where people fight. Weeds ≤ 0.35 m, ivy flat on walls, trees (high crowns) only in a 12 m perimeter band away from spawns/objective. Trees are chosen in a seeded shuffled order (the first version put all 18 on the north edge).
+- `vegetation.ts` — 18 pines (3 grown variants, 6 draw calls), ~3,150 weed clusters (tiles), ~7,150 ivy leaves on shady façades (east/north, away from the late sun), ~520 low-poly holm oaks on the Carso. Canvas textures only, no new assets.
+
+## Measurements (desktop Intel Iris Xe, not Seeker)
+
+82–95 FPS at tier 0 with everything; vegetation costs ~7–8 % at the busiest spot. During one session the whole browser was throttled (menu at 15 FPS, Banchina Est at 20, Porto Vecchio at 1.5); it did not reproduce, but it means Porto Vecchio must be measured on a physical Seeker before release.

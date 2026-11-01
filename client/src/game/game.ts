@@ -16,6 +16,7 @@ import { OcclusionField, aabbsFromSimBoxes } from '@shared/light/skyOcclusion';
 import { createSkyDome, environmentFromSky, hazeColor, lateAfternoonSky, sunDirection } from '../render/environment/sky';
 import { createSea } from '../render/environment/sea';
 import { createHills } from '../render/environment/hills';
+import { buildVegetation } from '../render/vegetation/vegetation';
 import type { MapDef } from '@shared/map/types';
 import type { PlayerClass } from '@shared/sim/etClasses';
 import { OnlineSession, type SessionOptions } from '../online/session';
@@ -131,7 +132,8 @@ export class Game {
       const dome = createSkyDome(sky, 1400);
       const sea = createSea(sky, this.map.waterLevel, 1400);
       this.scene.add(dome, sea.mesh, createHills());
-      this.envFrame = (sec) => { dome.position.copy(this.camera.position); sea.update(sec); };
+      let vegFrame: ((sec: number, cam: THREE.Vector3) => void) | null = null;
+      this.envFrame = (sec) => { dome.position.copy(this.camera.position); sea.update(sec); vegFrame?.(sec, this.camera.position); };
       const t0 = performance.now();
       const field = new OcclusionField(aabbsFromSimBoxes(loaded.simBoxes), { samples: 12, maxDistance: 24 });
       const groundAo = await loadGroundAo(import.meta.env.BASE_URL, loaded.id);
@@ -139,6 +141,15 @@ export class Game {
         occlusion: (x, y, z, nx, ny, nz) => field.visibility(x, y, z, nx, ny, nz), groundAo,
       });
       if (this.opts.debug) console.info('architecture + occlusion ms', Math.round(performance.now() - t0));
+      const rect = (b: { c: { x: number; z: number }; s: { x: number; z: number } }) => ({ minX: b.c.x - b.s.x / 2, maxX: b.c.x + b.s.x / 2, minZ: b.c.z - b.s.z / 2, maxZ: b.c.z + b.s.z / 2 });
+      const veg = buildVegetation({
+        plans: view.plans, bounds: this.map.bounds, seed: 20261101,
+        land: (this.map.groundSlabs ?? []).map(rect), solids: this.map.boxes.map(rect),
+        markers: [...this.map.spawns[0], ...this.map.spawns[1], this.map.objective],
+      });
+      this.scene.add(veg.group);
+      vegFrame = veg.update;
+      if (this.opts.debug) console.info('vegetation', JSON.stringify(veg.stats));
       if (import.meta.env.DEV) (globalThis as { __scene?: THREE.Scene }).__scene = this.scene; // dev inspection only
       this.scene.add(view.group);
       this.hostEl.querySelector<HTMLElement>('.blockout')?.remove(); // finished buildings, not box geometry
