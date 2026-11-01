@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+.wrangler-dryrun/
+.devfridge-progress/
+.env*
+*.jks
+*.keystore
+keystore.properties
+android-host/android/
+dist-dev/

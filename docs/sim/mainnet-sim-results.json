@@ -1,0 +1,23 @@
+{
+  "ranAt": "2026-10-29T01:29:56.143Z",
+  "rpc": "https://api.mainnet-beta.solana.com (read-only)",
+  "subject": "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
+  "route": {
+    "pool": "9RTD1Es749sYfaz4gNQGd9iQi2ougzRcvmzzYvEqskXN",
+    "vaults": [
+      "Hmokxd8TwUYGPNWgZ2BrFd9R9P1784CpziDF7R4hn7FF",
+      "BpQF5AHNPiWZAtuaiH1TPFzSBDkAtQTiL4EWqhxmzGaD"
+    ]
+  },
+  "simulation": {
+    "err": null,
+    "unitsConsumed": 105069,
+    "bytes": 853
+  },
+  "result": {
+    "spentLamports": "10000000",
+    "expectedPastaRaw": "208320609720",
+    "lockedPastaRaw": "204154197525",
+    "slippageBps": 200
+  }
+}

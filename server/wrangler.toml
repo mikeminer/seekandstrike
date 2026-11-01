@@ -1,0 +1,41 @@
+# PLACEHOLDER - NOT DEPLOYED. Do not run `wrangler deploy` without owner approval.
+# Free plan: Durable Objects must use the SQLite storage backend (new_sqlite_classes).
+name = "seek-and-strike-server"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = false
+# routes / custom domain: pending (owner domain not yet chosen)
+
+[[durable_objects.bindings]]
+name = "MATCH_ROOM"
+class_name = "MatchRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MatchRoom"]
+
+# Daily Pass RPC proxy (POST /rpc). The upstream URL is a SECRET, never committed:
+#   wrangler secret put RPC_UPSTREAM_URL      (owner only, at deploy time)
+[vars]
+RPC_ALLOWED_ORIGINS = "https://localhost"
+RPC_ALLOW_NO_ORIGIN = "false"
+
+# Per-client-IP budgets (Workers Rate Limiting binding; period must be 10 or 60 s).
+[[ratelimits]]
+name = "RPC_LIMIT"
+namespace_id = "7301"
+simple = { limit = 240, period = 60 }
+
+[[ratelimits]]
+name = "RPC_TX_LIMIT"
+namespace_id = "7302"
+simple = { limit = 20, period = 60 }
+
+# Online access proof attempts per client IP (every attempt that gets as far as a signature can cost chain reads).
+[[ratelimits]]
+name = "AUTH_LIMIT"
+namespace_id = "7303"
+simple = { limit = 12, period = 60 }
+
+[observability]
+enabled = false

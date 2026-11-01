@@ -1,0 +1,75 @@
+{
+  "input": "out/porto-vecchio-ts.glb",
+  "builtAt": "2026-10-28T09:20:53.175Z",
+  "ms": 6058,
+  "markers": {
+    "spawnAttack": 6,
+    "spawnDefend": 6,
+    "objective": 1,
+    "cover": 58,
+    "nav": 173,
+    "trigger": 0,
+    "light": 0
+  },
+  "markerIssues": [],
+  "colliders": {
+    "rapierColliders": 66,
+    "cuboids": 50,
+    "convex": 0,
+    "trimeshes": 16,
+    "heightfieldsAsTrimesh": 0,
+    "sensors": 0,
+    "simBoxes": 180,
+    "simApproxBoxes": 130,
+    "notSimRepresentable": 0,
+    "sourceTriangles": 1324,
+    "colliderTriangles": 954
+  },
+  "nav": {
+    "w": 560,
+    "h": 600,
+    "cells": 336000,
+    "walkable": 273539,
+    "reachable": 195634,
+    "crouchOnly": 9,
+    "withCover": 15325,
+    "upperCells": 60780,
+    "rays": 6394654
+  },
+  "paths": {
+    "attackToObjective": {
+      "length": 136.5,
+      "corners": 6
+    },
+    "defendToObjective": {
+      "length": 140.5,
+      "corners": 6
+    },
+    "attackToObjectiveCovered": {
+      "length": 141.9,
+      "corners": 9
+    }
+  },
+  "waypointEdges": 430,
+  "validation": [],
+  "render": {
+    "file": "render.glb",
+    "bytes": 29476,
+    "drawCalls": 12,
+    "triangles": 1324,
+    "materials": [
+      "quayStone",
+      "concreteDark",
+      "water",
+      "asphalt",
+      "rail",
+      "plaster",
+      "brick",
+      "steelPlate",
+      "containerBlue",
+      "containerRed",
+      "containerGrey",
+      "barrier"
+    ]
+  }
+}

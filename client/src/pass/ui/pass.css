@@ -1,0 +1,38 @@
+.pass { text-align: left; border: 1px solid #f0b44a55; background: #f0b44a0d; border-radius: 8px; padding: 10px 12px; margin: 8px 0; font-size: 13px; }
+.pass-title { font-weight: 700; letter-spacing: .08em; color: var(--acc); text-transform: uppercase; font-size: 12px; margin-bottom: 4px; }
+.pass p { margin: 6px 0; }
+.pass .pass-offer { color: var(--fg); font-size: 14px; font-weight: 600; }
+.pass .pass-hint { color: var(--dim); font-size: 12px; }
+.pass .pass-warn { color: #ffcf6a; font-weight: 600; }
+.pass .pass-err { color: #ffb4a6; }
+.pass .pass-note { color: #ffcf6a; font-size: 12px; }
+.pass .pass-wait { color: var(--fg); }
+.pass .pass-wait::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 7px; border: 2px solid var(--acc); border-right-color: transparent; border-radius: 50%; animation: pass-spin .8s linear infinite; vertical-align: -1px; }
+@keyframes pass-spin { to { transform: rotate(360deg); } }
+.pass .pass-ok { color: #9fd18b; font-weight: 700; font-size: 15px; }
+.pass .pass-count { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 2px 0; }
+.pass .pass-sub { font-weight: 700; margin: 8px 0 4px; font-size: 12px; letter-spacing: .04em; }
+.pass .pass-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; background: #0006; border-radius: 6px; padding: 8px; }
+.pass .pass-total b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.pass .pass-total small, .pass .pass-row small { color: var(--dim); width: 100%; }
+.pass .pass-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 3px 0; border-bottom: 1px solid #ffffff10; }
+.pass .pass-row b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.pass .pass-row small { text-align: right; }
+.pass .pass-break { margin-top: 6px; font-size: 12px; }
+.pass .pass-tol { display: flex; align-items: center; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+.pass .pass-age { display: block; color: var(--dim); font-size: 11px; margin-top: 4px; }
+.pass .pass-wallet { display: flex; justify-content: space-between; align-items: center; font: 12px ui-monospace, monospace; color: var(--dim); }
+.menu .pass button { margin: 6px 6px 0 0; }
+.menu .pass button.pass-alt { background: #2a333c; color: var(--fg); }
+.menu .pass button.pass-link { background: none; color: var(--acc); padding: 4px 0; text-decoration: underline; font-weight: 500; font-size: 12px; margin: 4px 0 0; }
+.menu .pass .pass-chip { background: #2a333c; color: var(--fg); padding: 4px 10px; font-size: 12px; margin: 0; border-radius: 12px; display: inline-block; }
+.menu .pass .pass-chip.on { background: var(--acc); color: #111; }
+.pass .pass-ended { margin-top: 10px; border-top: 1px solid #ffffff1a; }
+.pass .pass-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; padding: 4px 0; }
+.pass .pass-item small { width: 100%; }
+.pass .pass-details { font-size: 12px; color: var(--fg); background: #0006; border-radius: 6px; padding: 6px 8px; margin-top: 4px; }
+.pass .pass-addr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; }
+.pass .pass-addr code { font-size: 11px; word-break: break-all; color: #cfe3ff; flex: 1 1 100%; }
+.menu button[disabled] { opacity: .4; }
+.menu .card { max-height: calc(100vh - 16px); overflow-y: auto; }
+.menu .gate[hidden] { display: none; }

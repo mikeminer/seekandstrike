@@ -1,0 +1,72 @@
+{
+  "input": "out/banchina-est.glb",
+  "builtAt": "2026-10-28T09:20:45.897Z",
+  "ms": 723,
+  "markers": {
+    "spawnAttack": 6,
+    "spawnDefend": 6,
+    "objective": 1,
+    "cover": 18,
+    "nav": 44,
+    "trigger": 1,
+    "light": 0
+  },
+  "markerIssues": [],
+  "colliders": {
+    "rapierColliders": 53,
+    "cuboids": 53,
+    "convex": 0,
+    "trimeshes": 0,
+    "heightfieldsAsTrimesh": 0,
+    "sensors": 0,
+    "simBoxes": 53,
+    "simApproxBoxes": 0,
+    "notSimRepresentable": 0,
+    "sourceTriangles": 648,
+    "colliderTriangles": 636
+  },
+  "nav": {
+    "w": 143,
+    "h": 166,
+    "cells": 23738,
+    "walkable": 22514,
+    "reachable": 21305,
+    "crouchOnly": 1,
+    "withCover": 2459,
+    "upperCells": 334,
+    "rays": 459298
+  },
+  "paths": {
+    "attackToObjective": {
+      "length": 64.9,
+      "corners": 5
+    },
+    "defendToObjective": {
+      "length": 31,
+      "corners": 5
+    },
+    "attackToObjectiveCovered": {
+      "length": 68.1,
+      "corners": 3
+    }
+  },
+  "waypointEdges": 138,
+  "validation": [],
+  "render": {
+    "file": "render.glb",
+    "bytes": 19344,
+    "drawCalls": 9,
+    "triangles": 648,
+    "materials": [
+      "quayStone",
+      "water",
+      "concrete",
+      "barrier",
+      "steelPlate",
+      "crate",
+      "containerBlue",
+      "containerRed",
+      "containerGrey"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "seekandstrike-android-host",
+  "private": true,
+  "version": "0.0.1",
+  "license": "GPL-3.0-or-later",
+  "description": "Capacitor Android host for SEEK & STRIKE (dependencies live in the parent package.json)"
+}

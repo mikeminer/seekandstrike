@@ -1,0 +1,51 @@
+{
+  "name": "seek-and-strike",
+  "private": true,
+  "version": "0.0.1",
+  "description": "SEEK & STRIKE — 'Every Seeker is a soldier.' Realistic 2030 objective-based FPS for Solana Seeker (Three.js). Gameplay reference: Enemy Territory GPL source (mechanics only).",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p server/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "server:check": "wrangler deploy --dry-run --outdir .wrangler-dryrun -c server/wrangler.toml",
+    "server:dev": "wrangler dev -c server/wrangler.toml",
+    "server:dev:online": "wrangler dev -c server/wrangler.toml --var ONLINE_REQUIRE_PASS:false",
+    "online:smoke": "node scripts/online-smoke.mjs",
+    "pass:smoke": "node scripts/pass-smoke.mjs",
+    "build:dev": "npm run typecheck && vite build --mode devbypass --outDir ../dist-dev --emptyOutDir",
+    "check:release": "node scripts/check-release-bypass.mjs",
+    "sim": "vitest run -c vitest.sim.config.ts"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@dimforge/rapier3d-compat": "0.21.0",
+    "@solana-mobile/mobile-wallet-adapter-protocol": "3.0.1",
+    "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "3.0.1",
+    "@solana/wallet-standard-features": "1.5.0",
+    "@solana/web3.js": "1.99.0",
+    "@wallet-standard/app": "1.1.1",
+    "buffer": "6.0.3",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@cloudflare/workers-types": "5.20261028.1",
+    "@pump-fun/pump-sdk": "4.3.1",
+    "@solana/spl-token": "0.4.15",
+    "@types/bn.js": "5.2.0",
+    "@types/three": "0.186.0",
+    "bn.js": "5.2.5",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "5.0.5",
+    "wrangler": "4.154.0"
+  }
+}

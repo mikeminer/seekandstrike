@@ -1,0 +1,14 @@
+{
+  "appId": "it.seekandstrike.app",
+  "appName": "SEEK & STRIKE",
+  "webDir": "../dist",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

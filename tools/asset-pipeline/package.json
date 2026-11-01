@@ -1,0 +1,17 @@
+{
+  "name": "seek-and-strike-asset-pipeline",
+  "private": true,
+  "type": "module",
+  "description": "Offline asset build (not shipped). Converts CC0 source packs into optimized GLB/WebP under public/assets.",
+  "scripts": {
+    "build": "node build-assets.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "meshoptimizer": "1.3.0",
+    "sharp": "0.35.5",
+    "three": "0.186.1"
+  }
+}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>map preview</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}#hud{position:fixed;left:12px;top:10px;color:#fff;font:600 15px/1.35 system-ui,sans-serif;text-shadow:0 1px 3px #000;white-space:pre}#leg{position:fixed;right:12px;bottom:10px;color:#eee;font:12px system-ui;background:#0009;padding:6px 9px;border-radius:6px;white-space:pre}</style>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+</head><body><div id="hud"></div><div id="leg"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+const P = new URLSearchParams(location.search);
+const view = P.get('view') ?? 'persp';
+const data = await (await fetch('/data.json')).json();
+const { markers, nav, path, pathCovered, report } = data;
+const W = innerWidth, H = innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const env = markers.environment ?? {};
+const fogC = new THREE.Color(env.fog?.color ?? '#b9c4cc');
+scene.background = fogC.clone();
+const ext0 = Math.max(markers.bounds.maxX - markers.bounds.minX, markers.bounds.maxZ - markers.bounds.minZ);
+if (view === 'persp') scene.fog = new THREE.Fog(fogC, ext0 * 0.9, ext0 * 3);
+if (view === 'fp') scene.fog = new THREE.Fog(fogC, env.fog?.near ?? 60, env.fog?.far ?? 220);
+scene.add(new THREE.HemisphereLight(0xdfe8f0, 0x4a4036, 1.1));
+const sun = new THREE.DirectionalLight(0xfff1dc, 2.6);
+const az = THREE.MathUtils.degToRad(env.sun?.azimuthDeg ?? 120), el = THREE.MathUtils.degToRad(Math.max(25, env.sun?.elevationDeg ?? 35));
+const b = markers.bounds, cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2, ext = Math.max(b.maxX - b.minX, b.maxZ - b.minZ);
+sun.position.set(cx + Math.sin(az) * Math.cos(el) * 200, Math.sin(el) * 200, cz + Math.cos(az) * Math.cos(el) * 200);
+sun.target.position.set(cx, 0, cz); scene.add(sun.target);
+sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); // Seeker budget: one 1024 shadow map
+const sc = sun.shadow.camera; sc.left = -ext * 0.6; sc.right = ext * 0.6; sc.top = ext * 0.6; sc.bottom = -ext * 0.6; sc.near = 1; sc.far = 600; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.04;
+scene.add(sun);
+
+const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('/render.glb');
+gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = !/water/i.test(o.material.name); o.receiveShadow = true; if (/water/i.test(o.material.name)) { o.material.transparent = true; o.material.opacity = 0.82; o.material.depthWrite = false; o.renderOrder = 2; } } });
+scene.add(gltf.scene);
+
+// Nav heatmap (top view): green = reachable, amber = walkable but enclosed/unreachable, blue = water, dark = cover cells.
+if (view === 'top' && nav) {
+  const c = document.createElement('canvas'); c.width = nav.w; c.height = nav.h;
+  const g2 = c.getContext('2d'); const img = g2.createImageData(nav.w, nav.h);
+  const fl = Uint8Array.from(atob(nav.flags), (ch) => ch.charCodeAt(0));
+  const cov = nav.coverHigh ? Uint8Array.from(atob(nav.coverHigh), (ch) => ch.charCodeAt(0)) : null;
+  for (let k = 0; k < fl.length; k++) {
+    const f = fl[k]; let col = null;
+    if (f & 4) col = cov && cov[k] ? [20, 120, 60, 150] : [60, 220, 110, 95];
+    else if (f & 1) col = [240, 180, 40, 70];
+    else if (f & 8) col = [40, 120, 255, 60];
+    if (col) img.data.set(col, k * 4);
+  }
+  g2.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c); tex.magFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
+  const pl = new THREE.Mesh(new THREE.PlaneGeometry(nav.w * nav.cell, nav.h * nav.cell), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false }));
+  pl.rotation.x = -Math.PI / 2; pl.position.set(nav.origin[0] + nav.w * nav.cell / 2, 0.15, nav.origin[1] + nav.h * nav.cell / 2); pl.renderOrder = 5;
+  scene.add(pl);
+}
+// Markers
+const COL = { spawn0: 0x2f7bff, spawn1: 0xff3b30, objective: 0xffd60a, cover: 0x30d158, nav: 0xffffff, trigger: 0xbf5af2, light: 0xffffff };
+const s = view === 'top' ? Math.max(1, ext / 90) : 1;
+const geo = { sph: new THREE.SphereGeometry(0.45 * s, 12, 8), cone: new THREE.ConeGeometry(0.6 * s, 1.6 * s, 10), small: new THREE.SphereGeometry(0.25 * s, 8, 6) };
+for (const m of markers.markers) {
+  if (view === 'fp' && (m.kind === 'nav' || m.kind === 'spawn' || m.kind === 'cover')) continue;
+  const mat = new THREE.MeshBasicMaterial({ color: m.kind === 'spawn' ? COL['spawn' + m.team] : COL[m.kind] ?? 0xffffff, depthTest: view !== 'top', transparent: true, opacity: m.kind === 'nav' ? 0.6 : 1 });
+  let o;
+  if (m.kind === 'spawn') { o = new THREE.Mesh(geo.cone, mat); o.rotation.order = 'YXZ'; o.rotation.y = m.yaw ?? 0; o.rotation.x = -Math.PI / 2; }
+  else if (m.kind === 'objective') { o = new THREE.Mesh(new THREE.OctahedronGeometry(1.1 * s), mat); }
+  else if (m.kind === 'trigger') { o = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...(m.size ?? [1, 1, 1]))), new THREE.LineBasicMaterial({ color: COL.trigger })); }
+  else o = new THREE.Mesh(m.kind === 'nav' ? geo.small : geo.sph, mat);
+  o.position.set(m.position[0], m.position[1] + (m.kind === 'trigger' ? 0 : 1.0), m.position[2]); o.renderOrder = 10;
+  scene.add(o);
+}
+const addPath = (pts, color) => { if (!pts) return; const g = new THREE.BufferGeometry().setFromPoints(pts.map((p) => new THREE.Vector3(p[0], p[1] + 0.35, p[2]))); const l = new THREE.Line(g, new THREE.LineBasicMaterial({ color, depthTest: false })); l.renderOrder = 11; scene.add(l); };
+addPath(path, 0x00e5ff); addPath(pathCovered, 0xff9f0a);
+
+let cam;
+if (view === 'top') {
+  const a = W / H, half = ext * 0.53;
+  cam = a > 1 ? new THREE.OrthographicCamera(-half * a, half * a, half, -half, 1, 1000) : new THREE.OrthographicCamera(-half, half, half / a, -half / a, 1, 1000);
+  cam.position.set(cx, 300, cz); cam.up.set(0, 0, -1); cam.lookAt(cx, 0, cz);
+} else if (view === 'fp') {
+  const sp = markers.markers.find((m) => m.kind === 'spawn' && m.team === 0), ob = markers.markers.find((m) => m.kind === 'objective');
+  cam = new THREE.PerspectiveCamera(70, W / H, 0.1, 800);
+  cam.position.set(sp.position[0], sp.position[1] + 1.65, sp.position[2]);
+  cam.lookAt(ob.position[0], 1.4, ob.position[2]);
+} else {
+  cam = new THREE.PerspectiveCamera(50, W / H, 0.5, 1500);
+  cam.position.set(cx + ext * 0.62, ext * 0.55, cz + ext * 0.78); cam.lookAt(cx, 0, cz);
+}
+renderer.render(scene, cam);
+const info = renderer.info.render;
+const r = report.render ?? {};
+document.getElementById('hud').textContent = `${markers.map ?? ''} — ${view}\nGLB: ${r.drawCalls} mesh draws · ${r.triangles} tris · ${(r.bytes / 1024).toFixed(0)} KB\nframe (incl. overlays+shadow): ${info.calls} calls · ${info.triangles} tris\nnav ${report.nav.w}×${report.nav.h} @${nav.cell} m · reachable ${report.nav.reachable}\nA* spawn→obj ${report.paths.attackToObjective?.length ?? '–'} m (cyan) · covered ${report.paths.attackToObjectiveCovered?.length ?? '–'} m (orange)` + (markers.attribution ? `\n${markers.attribution}` : '');
+document.getElementById('leg').textContent = 'blue cone attack spawn · red cone defend spawn · yellow objective · green cover · white nav' + (view === 'top' ? '\nheatmap: green reachable · dark green high cover · amber enclosed · blue water' : '');
+window.__done = { calls: info.calls, triangles: info.triangles };
+</script></body></html>
