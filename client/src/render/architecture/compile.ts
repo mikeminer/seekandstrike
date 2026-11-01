@@ -15,8 +15,13 @@ const GLASS_COLOR = 0x1b2226;
 const ROOF_COLOR = 0x8a4f3a;
 const ARCH_SEGMENTS = 6;
 
+/** Sky visibility in [0, 1] at a surface point and normal (shared/src/light/skyOcclusion.ts). */
+export type Occlusion = (x: number, y: number, z: number, nx: number, ny: number, nz: number) => number;
+
 class SlotWriter {
-  pos: number[] = []; nor: number[] = []; uv: number[] = []; col: number[] = []; idx: number[] = [];
+  pos: number[] = []; nor: number[] = []; uv: number[] = []; col: number[] = []; idx: number[] = []; ao: number[] = [];
+  constructor(private readonly occlusion?: Occlusion) {}
+  private aoAt(v: THREE.Vector3, n: THREE.Vector3): number { return this.occlusion ? this.occlusion(v.x, v.y, v.z, n.x, n.y, n.z) : 1; }
   get triangles(): number { return this.idx.length / 3; }
 
   /** Quad p0..p3 (any winding); made to face `n`. */
@@ -27,6 +32,7 @@ class SlotWriter {
       this.nor.push(n.x, n.y, n.z);
       this.uv.push(uvs[i]![0], uvs[i]![1]);
       this.col.push(color.r, color.g, color.b);
+      this.ao.push(this.aoAt(p[i]!, n));
     }
     const e1 = new THREE.Vector3().subVectors(p[1]!, p[0]!), e2 = new THREE.Vector3().subVectors(p[2]!, p[0]!);
     const front = e1.cross(e2).dot(n) >= 0;
@@ -39,7 +45,7 @@ class SlotWriter {
     const base = this.pos.length / 3;
     for (const v of [center, ...ring]) {
       this.pos.push(v.x, v.y, v.z); this.nor.push(n.x, n.y, n.z);
-      const [u, w] = uvOf(v); this.uv.push(u, w); this.col.push(color.r, color.g, color.b);
+      const [u, w] = uvOf(v); this.uv.push(u, w); this.col.push(color.r, color.g, color.b); this.ao.push(this.aoAt(v, n));
     }
     for (let i = 0; i + 1 < ring.length; i++) {
       const a = base + 1 + i, b = base + 2 + i;
@@ -55,6 +61,7 @@ class SlotWriter {
     g.setAttribute('normal', new THREE.Float32BufferAttribute(this.nor, 3));
     g.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv, 2));
     g.setAttribute('color', new THREE.Float32BufferAttribute(this.col, 3));
+    if (this.occlusion) g.setAttribute('ao', new THREE.Float32BufferAttribute(this.ao, 1));
     g.setIndex(this.idx);
     g.computeBoundingSphere();
     return g;
@@ -71,10 +78,16 @@ function frame(side: Side, plane: number): { at: (u: number, y: number, w: numbe
   }
 }
 
-function wallQuad(w: SlotWriter, e: FacadeEdge, a: number, b: number, y0: number, y1: number, off: number, color: THREE.Color, tile: number): void {
+/** Wall piece; split into ~cell-sized quads when baking occlusion so the AO has vertices to live on. */
+function wallQuad(w: SlotWriter, e: FacadeEdge, a: number, b: number, y0: number, y1: number, off: number, color: THREE.Color, tile: number, cell: number): void {
   const f = frame(e.side, e.plane);
-  w.quad([f.at(a, y0, off), f.at(b, y0, off), f.at(b, y1, off), f.at(a, y1, off)], f.out,
-    [[a / tile, y0 / tile], [b / tile, y0 / tile], [b / tile, y1 / tile], [a / tile, y1 / tile]], color);
+  const nu = Math.max(1, Math.ceil((b - a) / cell)), nv = Math.max(1, Math.ceil((y1 - y0) / cell));
+  for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+    const ua = a + ((b - a) * i) / nu, ub = a + ((b - a) * (i + 1)) / nu;
+    const va = y0 + ((y1 - y0) * j) / nv, vb = y0 + ((y1 - y0) * (j + 1)) / nv;
+    w.quad([f.at(ua, va, off), f.at(ub, va, off), f.at(ub, vb, off), f.at(ua, vb, off)], f.out,
+      [[ua / tile, va / tile], [ub / tile, va / tile], [ub / tile, vb / tile], [ua / tile, vb / tile]], color);
+  }
 }
 
 /** Box module standing out of the wall: front, top, bottom and both ends (the back is inside the wall). */
@@ -116,15 +129,17 @@ export interface CompiledArchitecture {
 }
 
 /** Compiles every plan into at most one geometry per slot (≤ 4 draw calls for all buildings). */
-export function compileArchitecture(plans: readonly BuildingPlan[]): CompiledArchitecture {
-  const writers: Record<Slot, SlotWriter> = { wall: new SlotWriter(), stone: new SlotWriter(), window: new SlotWriter(), roof: new SlotWriter() };
+export function compileArchitecture(plans: readonly BuildingPlan[], occlusion?: Occlusion): CompiledArchitecture {
+  // Roofs see open sky: no occlusion there. Walls are split only when occlusion is baked.
+  const writers: Record<Slot, SlotWriter> = { wall: new SlotWriter(occlusion), stone: new SlotWriter(occlusion), window: new SlotWriter(occlusion), roof: new SlotWriter() };
+  const cell = occlusion ? 2.2 : Infinity;
   const stone = new THREE.Color(STONE_COLOR), glass = new THREE.Color(GLASS_COLOR), roof = new THREE.Color(ROOF_COLOR);
   const modules: Record<string, number> = {};
   for (const plan of plans) {
     const plaster = new THREE.Color(PLASTER_PALETTE[plan.style.plaster]!);
     const edges = new Map(plan.edges.map((e) => [e.id, e]));
     // Mass closure: exposed walls and roof caps only (hidden faces are never emitted).
-    for (const e of plan.edges) wallQuad(writers.wall, e, e.a, e.b, e.y0, e.y1, 0, plaster, SLOT_TILE.wall);
+    for (const e of plan.edges) wallQuad(writers.wall, e, e.a, e.b, e.y0, e.y1, 0, plaster, SLOT_TILE.wall, cell);
     for (const r of plan.rects) {
       const t = SLOT_TILE.roof;
       writers.roof.quad(

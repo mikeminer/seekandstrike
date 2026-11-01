@@ -182,6 +182,7 @@ export class Match {
     this.stepProjectiles(dt);
     if (this.opts.lagCompensation) this.recordPoses();
     this.stepGrenades(dt);
+    this.stepWater();
     this.stepRevives(dt);
 
     for (const c of this.combatants) {
@@ -390,6 +391,18 @@ export class Match {
       const outcome = applyDamage(c.health, amount, g.ownerId);
       if (outcome === 'downed' && c.id !== g.ownerId) owner.kills++;
       this.events.push({ type: 'damage', attacker: g.ownerId, victim: c.id, amount, zone: 'blast', outcome });
+    }
+  }
+
+  /** Falling into the sea (maps with land slabs) is fatal: no revive, respawn with the next wave. */
+  private stepWater(): void {
+    const limit = this.map.waterLevel - 0.8;
+    for (const c of this.combatants) {
+      if (c.health.state === 'dead' || c.pos.y > limit) continue;
+      c.health.hp = 0;
+      c.health.state = 'dead';
+      c.health.lastAttacker = c.id;
+      this.events.push({ type: 'damage', attacker: c.id, victim: c.id, amount: 0, zone: 'water', outcome: 'killed' });
     }
   }
 

@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { BoxLook, MapBox, MapDef } from '@shared/map/types';
 import type { AssetStore, TextureSetId } from './assets';
-import { compileArchitecture, SLOTS, type Slot } from './architecture/compile';
+import { compileArchitecture, SLOTS, type Occlusion, type Slot } from './architecture/compile';
 import { massFromSimBoxes, planBuildings } from './architecture/plan';
 
 /**
@@ -152,13 +152,48 @@ const GROUND_LOOKS: Record<string, LookSpec> = {
   rail: { set: 'MetalPlates006', tile: 1.5, tint: 0x5e5249, metalness: 0.6 },
 };
 
+/** Baked ground sky-occlusion lightmap (tools/light-bake) and the world rectangle it covers. */
+export interface GroundAo { texture: THREE.Texture; bounds: { minX: number; maxX: number; minZ: number; maxZ: number } }
+
+export interface ArchitectureViewOptions {
+  /** Per-vertex façade occlusion, computed once at load from the same model as the ground bake. */
+  occlusion?: Occlusion;
+  groundAo?: GroundAo | null;
+}
+
+/** Applies the per-vertex `ao` attribute to indirect light only (like aoMap): direct sun is untouched. */
+function useVertexAo(m: THREE.MeshStandardMaterial): THREE.MeshStandardMaterial {
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float ao;\nvarying float vAo;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvAo = ao;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vAo;')
+      .replace('#include <aomap_fragment>', 'reflectedLight.indirectDiffuse *= vAo;\nreflectedLight.indirectSpecular *= vAo;');
+  };
+  m.customProgramCacheKey = () => 'vertex-ao';
+  return m;
+}
+
+/** uv1 = world XZ mapped onto the baked lightmap (row 0 of the PNG is minZ). */
+function addLightmapUv(geo: THREE.BufferGeometry, b: GroundAo['bounds']): void {
+  const p = geo.getAttribute('position');
+  const uv1 = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    uv1[i * 2] = (p.getX(i) - b.minX) / (b.maxX - b.minX);
+    uv1[i * 2 + 1] = 1 - (p.getZ(i) - b.minZ) / (b.maxZ - b.minZ);
+  }
+  geo.setAttribute('uv1', new THREE.BufferAttribute(uv1, 2));
+}
+
 /**
  * Pipeline map whose buildings are rebuilt procedurally (DevFridge Game Builder v1.10.0,
  * landscapes-and-architecture → threejs-procedural-architecture). The GLB supplies ground, roads,
- * rails, sea and the box props; its blockout buildings (plaster/brick) are replaced by façades
- * compiled from the same collision boxes, in four draw calls.
+ * rails and the box props; its blockout buildings (plaster/brick) are replaced by façades compiled
+ * from the same collision boxes (four draw calls) and its flat water by the analytic sea (see
+ * render/environment/sea.ts, added by the caller). Ground and façades carry baked sky occlusion.
  */
-export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Parameters<typeof massFromSimBoxes>[0], assets: AssetStore): { group: THREE.Group; triangles: Record<string, number> } {
+export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Parameters<typeof massFromSimBoxes>[0], assets: AssetStore, opts: ArchitectureViewOptions = {}): { group: THREE.Group; triangles: Record<string, number> } {
   const group = new THREE.Group();
   group.name = 'map';
   gltf.scene.updateMatrixWorld(true);
@@ -167,25 +202,25 @@ export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Para
     if (!src.isMesh) return;
     const srcMat = Array.isArray(src.material) ? src.material[0] : src.material;
     const name = srcMat?.name ?? '';
-    if (name === 'plaster' || name === 'brick') return; // replaced by the procedural buildings below
-    if (name === 'water') {
-      const water = new THREE.Mesh(assets.track(worldGeometryFromGlb(src, 8)), assets.track(new THREE.MeshStandardMaterial({
-        color: 0x1d3a40, roughness: 0.06, metalness: 0, envMapIntensity: 1.1,
-        normalMap: assets.set('Concrete034').normalMap, normalScale: new THREE.Vector2(0.15, 0.15),
-      })));
-      water.name = 'water';
-      group.add(water);
-      return;
-    }
+    // Blockout buildings → procedural architecture; flat water → analytic sea (caller).
+    if (name === 'plaster' || name === 'brick' || name === 'water') return;
     const spec = GROUND_LOOKS[name] ?? (name in LOOKS ? LOOKS[name as BoxLook] : null);
     if (!spec) return;
-    const mesh = new THREE.Mesh(assets.track(worldGeometryFromGlb(src, spec.tile)), material(assets, spec));
+    const geo = worldGeometryFromGlb(src, spec.tile);
+    const mat = material(assets, spec);
+    if (opts.groundAo && name in GROUND_LOOKS && name !== 'concreteDark') {
+      addLightmapUv(geo, opts.groundAo.bounds);
+      mat.aoMap = opts.groundAo.texture;
+      mat.aoMapIntensity = 1;
+    }
+    const mesh = new THREE.Mesh(assets.track(geo), mat);
     mesh.castShadow = !(name in GROUND_LOOKS);
     mesh.receiveShadow = true;
     mesh.name = `map-${name}`;
     group.add(mesh);
   });
-  const compiled = compileArchitecture(planBuildings(massFromSimBoxes(simBoxes)));
+  void map;
+  const compiled = compileArchitecture(planBuildings(massFromSimBoxes(simBoxes)), opts.occlusion);
   const stoneSet = assets.set('Concrete034');
   const slotMaterial: Record<Slot, THREE.MeshStandardMaterial> = {
     wall: new THREE.MeshStandardMaterial({ map: stoneSet.map, normalMap: stoneSet.normalMap, roughnessMap: stoneSet.roughnessMap, vertexColors: true, roughness: 1 }),
@@ -196,7 +231,8 @@ export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Para
   for (const slot of SLOTS) {
     const geo = compiled.geometries[slot];
     if (!geo) continue;
-    const mesh = new THREE.Mesh(assets.track(geo), assets.track(slotMaterial[slot]));
+    const mat = geo.getAttribute('ao') ? useVertexAo(slotMaterial[slot]) : slotMaterial[slot];
+    const mesh = new THREE.Mesh(assets.track(geo), assets.track(mat));
     // Only the mass (walls, roofs) casts shadows: thin trims and glass would add shadow-pass cost for little gain.
     mesh.castShadow = slot === 'wall' || slot === 'roof';
     mesh.receiveShadow = true;

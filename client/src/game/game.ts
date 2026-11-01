@@ -11,7 +11,11 @@ import { createPhysicsWorld, type PhysicsWorld } from '../physics/world';
 import { setRendererPixelRatio } from '../render/renderer';
 import { AssetStore } from '../render/assets';
 import { buildArchitectureMapView, buildMapView, buildMapViewFromGlb, buildObjectiveProp } from '../render/mapView';
-import { DEFAULT_MAP, MAPS, loadPipelineMap, type MapId } from './mapLoader';
+import { DEFAULT_MAP, MAPS, loadGroundAo, loadPipelineMap, type MapId } from './mapLoader';
+import { OcclusionField, aabbsFromSimBoxes } from '@shared/light/skyOcclusion';
+import { createSkyDome, environmentFromSky, hazeColor, lateAfternoonSky, sunDirection } from '../render/environment/sky';
+import { createSea } from '../render/environment/sea';
+import { createHills } from '../render/environment/hills';
 import type { MapDef } from '@shared/map/types';
 import type { PlayerClass } from '@shared/sim/etClasses';
 import { OnlineSession, type SessionOptions } from '../online/session';
@@ -53,6 +57,10 @@ export class Game {
   private hud: Hud;
   readonly sfx = new Sfx();
   private sun = new THREE.DirectionalLight(0xfff0d8, 3.2);
+  /** Towards the sun; the map's authored environment may override the default. */
+  private sunDir = SUN_DIR.clone();
+  /** Per-frame hooks of the map environment (sky dome follows the camera, sea waves advance). */
+  private envFrame: ((seconds: number) => void) | null = null;
   private objective!: ReturnType<typeof buildObjectiveProp>;
   private governor: GovernorState = createQualityGovernor({ nowMs: performance.now() });
   private tier = 0;
@@ -109,7 +117,29 @@ export class Game {
     const loaded = await loadPipelineMap(import.meta.env.BASE_URL, this.opts.mapId ?? DEFAULT_MAP);
     this.map = loaded.map;
     if (loaded.glb && MAPS[loaded.id].architecture) {
-      const view = buildArchitectureMapView(loaded.glb, this.map, loaded.simBoxes, this.assets);
+      // Sky, sea, haze, hills and baked light (DevFridge Game Builder v1.10.0, landscapes-and-architecture).
+      const sun = loaded.environment?.sun;
+      if (sun) this.sunDir.copy(sunDirection(sun.azimuthDeg, sun.elevationDeg));
+      const sky = lateAfternoonSky(this.sunDir);
+      this.scene.background = null;
+      this.scene.environment = environmentFromSky(this.renderer, sky);
+      this.scene.environmentIntensity = 1.35; // shade is lit by the sky only: keep it readable
+      this.scene.fog = new THREE.FogExp2(hazeColor(sky), sky.hazeDensity);
+      this.sun.color.copy(sky.sunColor);
+      this.camera.far = 1500;
+      this.camera.updateProjectionMatrix();
+      const dome = createSkyDome(sky, 1400);
+      const sea = createSea(sky, this.map.waterLevel, 1400);
+      this.scene.add(dome, sea.mesh, createHills());
+      this.envFrame = (sec) => { dome.position.copy(this.camera.position); sea.update(sec); };
+      const t0 = performance.now();
+      const field = new OcclusionField(aabbsFromSimBoxes(loaded.simBoxes), { samples: 12, maxDistance: 24 });
+      const groundAo = await loadGroundAo(import.meta.env.BASE_URL, loaded.id);
+      const view = buildArchitectureMapView(loaded.glb, this.map, loaded.simBoxes, this.assets, {
+        occlusion: (x, y, z, nx, ny, nz) => field.visibility(x, y, z, nx, ny, nz), groundAo,
+      });
+      if (this.opts.debug) console.info('architecture + occlusion ms', Math.round(performance.now() - t0));
+      if (import.meta.env.DEV) (globalThis as { __scene?: THREE.Scene }).__scene = this.scene; // dev inspection only
       this.scene.add(view.group);
       this.hostEl.querySelector<HTMLElement>('.blockout')?.remove(); // finished buildings, not box geometry
       if (this.opts.debug) console.info('architecture triangles', view.triangles);
@@ -290,6 +320,7 @@ export class Game {
     this.updateView(alpha, dt);
 
     this.renderer.autoClear = true;
+    this.envFrame?.(t / 1000);
     this.renderer.render(this.scene, this.camera);
     this.renderer.autoClear = false;
     this.renderer.clearDepth();
@@ -427,7 +458,7 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     const fx = Math.round((pp.x - Math.sin(p.yaw) * 12) / texel) * texel;
     const fz = Math.round((pp.z - Math.cos(p.yaw) * 12) / texel) * texel;
     this.sun.target.position.set(fx, 0, fz);
-    this.sun.position.set(fx + SUN_DIR.x * 60, SUN_DIR.y * 60, fz + SUN_DIR.z * 60);
+    this.sun.position.set(fx + this.sunDir.x * 60, this.sunDir.y * 60, fz + this.sunDir.z * 60);
 
     // Soldiers: detailed parts only for the N nearest (quality tier).
     const tier = DEFAULT_QUALITY_TIERS[this.tier]!;

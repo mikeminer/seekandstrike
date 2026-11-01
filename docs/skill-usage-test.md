@@ -42,3 +42,33 @@ These are **not** Seeker measurements and do not satisfy the 50 FPS release gate
 - The project still vendors skill **1.7.6** (`../devfridge-game-builder-skill/`); 1.10.0 was read from the DevFridge repository.
 - The 1.9.0 subscription rule ("any active deposit grants access, never compare the amount") differs from this game's Daily Pass, which checks a receipt plus a `passFloorRaw` threshold. With PASTA as the pass token, the 1.9 rule would also admit every wallet that already has a PASTA lock (there are ~98 on mainnet). That is an owner decision, not changed here.
 - `threejs-procedural-architecture`'s example is a financial tower; adapting it to low warehouses was straightforward because the reference separates grammar from modules. The skill could add a short "low-rise / historic warehouse" note.
+
+---
+
+# Second pass — sea, sky and baked light (2026-11-01)
+
+## Skill files used
+
+| Skill file | Used for |
+| --- | --- |
+| `vendor/threejs-graphics-skills/threejs-atmosphere-aerial-perspective/SKILL.md` | Tier choice ("small scene, no orbital camera → analytic height/distance approximation"); one sky model shared by sky dome, sea reflection, haze and image-based light, with the same sun direction. |
+| `vendor/mengto-threejs-skills/threejs-landscape/SKILL.md` | Six-stop sky gradient with the horizon stop just below the geometric horizon (haze colour = horizon stop, no seam); polar grid denser near, domain warp before octaves, ridges scaling with distance, colour from slope/height; the "watch the winding" check became a test. |
+| `vendor/threejs-graphics-skills/threejs-water-optics/SKILL.md` | Analytic surface build order: bands defined once, normal derived from the same bands, **normal-only** water (declared), absorption **fallback** constant (declared), Schlick Fresnel instead of constant opacity, no fake scrolling foam, derivative filter for sub-pixel bands. |
+| `references/landscapes-and-architecture.md` | `WebGLRenderer`, written budget, cheap-by-construction rules, "bake the light of static scenery". |
+
+`lightmap-baker` (recommended by the skill) could **not** be used: it requires `three >=0.185.1 <0.186.0` and this game ships `three 0.186.1`. Instead: `shared/src/light/skyOcclusion.ts` (sky occlusion against the map solids) + `tools/light-bake/bake-ground-ao.mjs` (offline bake → `public/assets/maps/porto-vecchio/ground-ao.png`, 1024², 172 KB, ~11 s). The same code computes per-vertex façade occlusion once at load. Both are applied to **indirect light only** (aoMap / vertex attribute), so sunlit surfaces are not darkened. A test fails if `colliders.json` changes without re-baking.
+
+## What was built
+
+- `client/src/render/environment/sky.ts` — sky model, sky dome, PMREM environment from the same sky, haze = horizon stop (FogExp2). Sun from the map's authored environment (azimuth 235°, elevation 22°, late afternoon over the gulf) instead of the global default.
+- `client/src/render/environment/sea.ts` — analytic sea (4 bands, Fresnel, sky reflection, sun glint, filtered bands), one disc to the horizon.
+- `client/src/render/environment/hills.ts` — Carso backdrop east of the port (one draw call, < 8k triangles, faces checked).
+
+## Bug exposed and fixed
+
+- **Players could walk on the sea.** The physics floor covered the whole map. Pipeline maps now expose their OSM land slabs (`MapDef.groundSlabs`); the floor exists only there, and falling into the sea is a water death (`Match.stepWater`). Banchina Est has no land slabs and keeps its full floor. Tests: `pipeline-patrols.test.ts`, `water.test.ts`.
+
+## Measurements (desktop Intel Iris Xe, not Seeker)
+
+- Busy spots with sky, sea, hills and baked light: **68–74 FPS, tier 0** (Banchina Est on the same machine: 66–77).
+- Load: architecture + façade occlusion **~1.06 s** on this PC; expect several seconds on a phone. If that is too slow on the Seeker, bake the façade occlusion offline like the ground.

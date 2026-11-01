@@ -1,0 +1,15 @@
+{
+ "format": "seek-strike-ground-ao",
+ "version": 1,
+ "map": "porto-vecchio",
+ "size": 1024,
+ "bounds": {
+  "minX": -140,
+  "maxX": 140,
+  "minZ": -150,
+  "maxZ": 150
+ },
+ "samples": 24,
+ "maxDistance": 24,
+ "collidersSha256": "892409b447f2cab4ec79d08bfdc347ddcc05eeef683a3cfec429c2acc4635c9f"
+}

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { PORTO_ARDESIA } from '@shared/map/portoArdesia';
@@ -21,7 +22,11 @@ export interface LoadedMap {
   glb: GLTF | null;
   /** Collider boxes with their pipeline node names (buildings are `bld_…`), for procedural architecture. */
   simBoxes: PipelineColliders['simBoxes'];
+  /** Authored lighting of the map (markers.json `environment`), when present. */
+  environment: MapEnvironment | null;
 }
+
+export interface MapEnvironment { sun?: { azimuthDeg: number; elevationDeg: number } }
 
 /**
  * Loads a pipeline-baked map (markers + colliders + navgrid + render.glb). If anything fails the
@@ -43,12 +48,31 @@ export async function loadPipelineMap(base: string, id: MapId): Promise<LoadedMa
     ]);
     const map = mapDefFromPipeline(markers, colliders, navgrid);
     map.nameKey = MAPS[id].nameKey;
-    return { id, map, glb, simBoxes: colliders.simBoxes };
+    const env = (markers as PipelineMarkers & { environment?: MapEnvironment | null }).environment ?? null;
+    return { id, map, glb, simBoxes: colliders.simBoxes, environment: env };
   } catch (err) {
     console.warn(`Map pipeline files for ${id} unavailable, using the built-in map.`, err);
-    return { id: DEFAULT_MAP, map: PORTO_ARDESIA, glb: null, simBoxes: [] };
+    return { id: DEFAULT_MAP, map: PORTO_ARDESIA, glb: null, simBoxes: [], environment: null };
   }
 }
 
 /** Banchina Est (kept for existing callers and tests). */
 export const loadBanchinaEst = (base: string): Promise<LoadedMap> => loadPipelineMap(base, 'banchina-est');
+
+/** Baked ground sky-occlusion lightmap (tools/light-bake/bake-ground-ao.mjs); null when the map has none. */
+export async function loadGroundAo(base: string, id: MapId): Promise<{ texture: THREE.Texture; bounds: { minX: number; maxX: number; minZ: number; maxZ: number } } | null> {
+  const dir = `${base}assets/maps/${id}/`;
+  try {
+    const r = await fetch(`${dir}ground-ao.json`);
+    if (!r.ok) return null;
+    const meta = (await r.json()) as { format: string; version: number; bounds: { minX: number; maxX: number; minZ: number; maxZ: number } };
+    if (meta.format !== 'seek-strike-ground-ao' || meta.version !== 1) return null;
+    const texture = await new THREE.TextureLoader().loadAsync(`${dir}ground-ao.png`);
+    texture.colorSpace = THREE.NoColorSpace; // data, not colour
+    texture.channel = 1; // uv1 = world XZ mapped onto the map bounds
+    return { texture, bounds: meta.bounds };
+  } catch (err) {
+    console.warn(`Ground lightmap for ${id} unavailable.`, err);
+    return null;
+  }
+}

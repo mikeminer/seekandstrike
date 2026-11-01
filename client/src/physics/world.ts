@@ -35,7 +35,12 @@ export async function createPhysicsWorld(map: MapDef, stepSeconds: number): Prom
   const { minX, maxX, minZ, maxZ } = map.bounds;
   const cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
   const hx = Math.max(80, (maxX - minX) / 2 + 10), hz = Math.max(80, (maxZ - minZ) / 2 + 10);
-  world.createCollider(RAPIER.ColliderDesc.cuboid(hx, 0.5, hz).setTranslation(cx, -0.5, cz));
+  if (map.groundSlabs?.length) {
+    // Land only: over the sea there is no floor, so a player who leaves the quay falls in (and drowns, see Match).
+    for (const g of map.groundSlabs) world.createCollider(RAPIER.ColliderDesc.cuboid(g.s.x / 2, g.s.y / 2, g.s.z / 2).setTranslation(g.c.x, g.c.y, g.c.z));
+  } else {
+    world.createCollider(RAPIER.ColliderDesc.cuboid(hx, 0.5, hz).setTranslation(cx, -0.5, cz));
+  }
   for (const b of map.boxes) {
     world.createCollider(RAPIER.ColliderDesc.cuboid(b.s.x / 2, b.s.y / 2, b.s.z / 2).setTranslation(b.c.x, b.c.y, b.c.z));
   }

@@ -55,8 +55,13 @@ export function mapDefFromPipeline(markers: PipelineMarkers, colliders: Pipeline
 
   // The sim has its own ground plane at y = 0: drop slabs whose top is at or below it.
   const boxes: MapBox[] = [];
+  const groundSlabs: MapBox[] = [];
   for (const b of colliders.simBoxes) {
-    if (b.c.y + b.s.y / 2 <= 0.001) continue;
+    if (b.c.y + b.s.y / 2 <= 0.001) {
+      // Land slabs tell the physics where there is ground; everything else at y <= 0 is water.
+      if (b.node?.startsWith('ground_land')) groundSlabs.push({ c: v3(b.c.x, b.c.y, b.c.z), s: v3(b.s.x, b.s.y, b.s.z), material: b.material, look: 'concrete' });
+      continue;
+    }
     const box: MapBox = { c: v3(b.c.x, b.c.y, b.c.z), s: v3(b.s.x, b.s.y, b.s.z), material: b.material, look: b.look ?? 'concrete' };
     if (b.shell !== undefined) box.shell = b.shell;
     if (b.fill !== undefined) box.fill = b.fill;
@@ -82,6 +87,7 @@ export function mapDefFromPipeline(markers: PipelineMarkers, colliders: Pipeline
     patrols: authored.length ? authored.map((p) => [...p]) : defaultPatrols(waypoints, pos(objective)),
     waterLevel: markers.waterLevel,
     navGrid: navgrid ? decodeNavGrid(navgrid) : undefined,
+    groundSlabs: groundSlabs.length ? groundSlabs : undefined,
   };
 }
 

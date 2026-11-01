@@ -33,6 +33,11 @@ export interface MapDef {
   /** Patrol loops for defenders (waypoint indices). */
   patrols: number[][];
   waterLevel: number;
+  /**
+   * Walkable ground slabs (top at y = 0) when the map defines where land is; water elsewhere.
+   * Absent: the whole map area is ground (hand-written maps, Banchina Est).
+   */
+  groundSlabs?: MapBox[] | undefined;
   /** Baked nav grid from the map pipeline; bots fall back to `waypoints` when absent. */
   navGrid?: NavGrid | undefined;
 }
