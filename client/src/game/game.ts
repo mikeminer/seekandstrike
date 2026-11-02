@@ -39,6 +39,7 @@ import { TouchControls } from '../input/touch';
 import { Hud } from '../ui/hud';
 import { t } from '../ui/i18n';
 import { Sfx } from '../audio/sfx';
+import { VoiceChat, type VoiceState } from '../online/voice';
 import { DEFAULT_QUALITY_TIERS, createQualityGovernor, observeFrame, type GovernorState } from '../perf/quality-governor.mjs';
 
 /** Sun direction measured from the bundled HDRI's brightest texel (elevation ~48°). */
@@ -109,6 +110,11 @@ export class Game {
   /** Aim-assist slowdown applied to touch look this frame (1 = none). */
   private assist = 1;
   private stepDist = new Map<number, number>();
+  /** Team voice (online only). */
+  private voice: VoiceChat | null = null;
+  private voicePrefs = { on: true, volume: 1 };
+  /** Set from the server's /health: whether it relays team voice. */
+  serverVoice = false;
   private hostEl: HTMLElement;
 
   constructor(private renderer: THREE.WebGLRenderer, parent: HTMLElement, private opts: GameOptions) {
@@ -123,7 +129,11 @@ export class Game {
     if (opts.touch) {
       this.touch = new TouchControls(parent, this.input);
       this.touch.getAdsScale = () => this.lookScale(true);
+      this.touch.onTalk = (down) => { if (down) void this.voice?.press(); else this.voice?.release(); };
     }
+    // Push-to-talk on desktop: hold V (online only).
+    window.addEventListener('keydown', (e) => { if (e.code === 'KeyV' && !e.repeat && this.voice) void this.voice.press(); });
+    window.addEventListener('keyup', (e) => { if (e.code === 'KeyV') this.voice?.release(); });
     const unlock = (): void => this.sfx.unlock();
     parent.addEventListener('pointerdown', unlock, { once: false, passive: true });
     window.addEventListener('keydown', unlock, { passive: true });
@@ -266,10 +276,13 @@ export class Game {
     const session = await OnlineSession.connect({
       ...o, cls: this.opts.playerClass ?? 0, map: this.map,
       onState: (st) => { if (st === 'reconnecting') this.hud.pushFeed(t('online.reconnecting'), false); },
+      onVoice: (b) => this.voice?.receive(b),
       onError: (code) => { if (code !== 'socket' || this.online) this.hud.pushFeed(code === 'pass_expired' ? t('online.err.expired') : t('online.lost'), false); },
     });
     this.online?.close();
+    this.voice?.dispose(); this.voice = null; this.touch?.setTalkVisible(false);
     this.online = session;
+    this.startVoice(session);
     this.match = session.mirror.match;
     this.tracker = new MatchTracker(this.match.playerId, this.match.player?.team ?? 0);
     this.endReported = false;
@@ -297,6 +310,8 @@ export class Game {
   /** Settings from the profile: sensitivities, aim assist, volume, rifle finish and dot colour, bot difficulty (next match). */
   applySettings(st: Settings): void {
     this.sens = { look: st.lookSens, aim: st.aimSens, assist: st.aimAssist };
+    this.voicePrefs = { on: st.voiceOn, volume: st.voiceVolume };
+    if (this.voice) { this.voice.enabled = st.voiceOn; this.voice.setVolume(st.voiceVolume); this.touch?.setTalkVisible(st.voiceOn && this.voice.state !== 'unsupported'); }
     this.sfx.setVolume(st.volume);
     this.opts.difficulty = st.difficulty;
     const fin = UNLOCKS.find((u) => u.id === st.finish), dot = UNLOCKS.find((u) => u.id === st.dot);
@@ -304,6 +319,20 @@ export class Game {
     this.pendingCosmetics = { tint: fin?.tint ?? 0xffffff, dot: dot?.dot ?? 0xff3020 };
   }
   private pendingCosmetics: { tint: number; dot: number } | null = null;
+
+  private startVoice(session: OnlineSession): void {
+    this.voice?.dispose();
+    this.voice = null;
+    if (!this.serverVoice) return;
+    const v = new VoiceChat((p) => session.net.sendVoice(p), (s: VoiceState) => {
+      this.touch?.setTalkActive(s === 'talking');
+      if (s === 'denied') this.hud.pushFeed(mt('voice.denied'), false);
+    });
+    v.enabled = this.voicePrefs.on;
+    v.setVolume(this.voicePrefs.volume);
+    this.voice = v;
+    this.touch?.setTalkVisible(v.state !== 'unsupported' && v.enabled);
+  }
 
   /** Class of the local player; takes effect when the next match starts. */
   setPlayerClass(c: PlayerClass): void { this.opts.playerClass = c; }
@@ -520,6 +549,10 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     this.tracker?.tick(dt, playing, p.health.state !== 'alive');
     if (!playing && this.tracker && !this.endReported) { this.endReported = true; this.onMatchEnd(this.tracker.report); }
 
+    // Team voice: who is speaking.
+    if (this.voice) this.hud.speakers = this.voice.speaking().map((id) => m.combatants[id]?.callsign ?? '?');
+    else this.hud.speakers = [];
+
     // Tutorial.
     if (this.tutorial && playing) {
       const near = distXZ(p.pos, m.map.objective) <= OBJECTIVE.interactRadius + 1.5;
@@ -674,6 +707,7 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
   dispose(): void {
     this.stop();
     this.online?.close();
+    this.voice?.dispose(); this.voice = null; this.touch?.setTalkVisible(false);
     this.input.dispose();
     this.touch?.dispose();
     this.hud.dispose();

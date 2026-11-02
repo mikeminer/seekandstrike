@@ -151,7 +151,10 @@ let onlineMapOk = false;
 if (onlineBase) {
   fetch(`${onlineBase.replace(/^ws/, 'http')}/health`, { cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : null))
-    .then((h: { maps?: unknown } | null) => { onlineMapOk = Array.isArray(h?.maps) ? h.maps.includes(chosenMap) : chosenMap === 'banchina-est'; })
+    .then((h: { maps?: unknown; voice?: unknown } | null) => {
+      onlineMapOk = Array.isArray(h?.maps) ? h.maps.includes(chosenMap) : chosenMap === 'banchina-est';
+      game.serverVoice = h?.voice === true; // older servers answer voice packets with errors: no talk button there
+    })
     .catch(() => { onlineMapOk = chosenMap === 'banchina-est'; })
     .finally(() => syncPlay());
 }

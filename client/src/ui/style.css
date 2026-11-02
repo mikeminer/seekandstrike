@@ -158,3 +158,8 @@ input, select, textarea, .pass code, .pass .addr { -webkit-user-select: text; us
 .lb-r.me { outline: 1px solid var(--acc); }
 .lb-gap { text-align: center; color: var(--dim); }
 .meta-pane .row input[type=text] { flex: 1; font: 600 13px system-ui, sans-serif; color: var(--fg); background: #0b0f13; border: 1px solid #ffffff30; border-radius: 6px; padding: 5px 8px; }
+
+/* Team voice. */
+.hud .voice { position: absolute; left: calc(10px + var(--sl)); top: calc(118px + var(--st)); font-size: 12px; color: #9fd18b; line-height: 1.5; }
+.b-talk { left: calc(22px + var(--sl)); top: calc(28% + var(--st)); width: 56px; height: 56px; background: #2a6a3a80; }
+.b-talk.active { background: #3fbf5fcc; border-color: #9fffb0; }

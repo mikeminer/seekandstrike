@@ -33,6 +33,7 @@ export class Hud {
         <div class="obj" data-k="obj"></div><div class="bar" data-k="barw" hidden><i data-k="bar"></i></div></div>
       <div class="tr"><div class="ammo" data-k="ammo"></div><div class="small" data-k="weapon"></div><div class="small" data-k="gren"></div></div>
       <div class="feed" data-k="feed"></div>
+      <div class="voice" data-k="voice"></div>
       <div class="cross" data-k="cross"><i class="h" data-k="cl"></i><i class="h" data-k="cr"></i><i class="v" data-k="cu"></i><i class="v" data-k="cd"></i><i class="dot"></i></div>
       <div class="hitm" data-k="hitm"></div>
       <div class="dmgdir" data-k="dmgdir"><i></i></div>
@@ -78,6 +79,14 @@ export class Hud {
     if (text !== null && this.el.tutT!.textContent !== text) this.el.tutT!.textContent = text;
   }
   set tutorialSkipLabel(v: string) { this.el.tutSkip!.textContent = v; }
+  private lastSpeakers = '';
+  /** Teammates speaking on team voice right now. */
+  set speakers(names: string[]) {
+    const key = names.join('|');
+    if (key === this.lastSpeakers) return;
+    this.lastSpeakers = key;
+    this.el.voice!.replaceChildren(...names.map((n) => { const d = document.createElement('div'); d.textContent = `🎙 ${n}`; return d; }));
+  }
   /** End-of-match summary HTML (empty to clear) and the label of the back-to-menu button (null hides it). */
   setSummary(html: string, menuLabel: string | null, againLabel?: string): void {
     this.el.endSum!.innerHTML = html;

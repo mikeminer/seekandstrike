@@ -7,6 +7,7 @@ import { PROOF_TTL_MS } from '@shared/passProof';
 import { RoomSim } from './roomSim';
 import { ONLINE_MAP_IDS, roomMap, type OnlineMapId } from './map';
 import type { Leaderboard } from '../leaderboard/leaderboard';
+import { VoiceBudget, checkUp, relayDown, voiceRecipients } from '@shared/voice';
 import { AccessGate, PassRegistry, RpcPassVerifier, passRpcFromUrl, type PendingAuth } from './access';
 
 export interface Env extends RpcEnv {
@@ -48,6 +49,7 @@ export class MatchRoom extends DurableObject<Env> {
   private lastSnap = 0;
   private roundEndSent = false;
   private rate = new WeakMap<WebSocket, { windowStart: number; n: number }>();
+  private voiceRate = new WeakMap<WebSocket, VoiceBudget>();
   private readonly passes = new PassRegistry();
   private gate: AccessGate | null = null;
   /** Map of this room, from the Worker's x-ss-map header (room name). */
@@ -94,6 +96,7 @@ export class MatchRoom extends DurableObject<Env> {
   }
 
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    if (typeof message !== 'string') return this.onVoice(ws, message);
     if (!this.allowed(ws)) return this.fail(ws, 'rate_limited', true);
     const msg = parseClientMessage(typeof message === 'string' ? message : null);
     if (!msg) return this.fail(ws, 'bad_message');
@@ -104,6 +107,25 @@ export class MatchRoom extends DurableObject<Env> {
     if (msg.t === 'auth') return this.onAuth(ws, msg, att);
     if (att.seat === null || !this.room) return this.fail(ws, 'not_joined');
     this.room.input(att.seat, msg);
+  }
+
+  /**
+   * Team voice (push-to-talk): a seated player's Opus packet goes, unchanged, to the connected teammates only.
+   * Nothing is decoded, stored or logged. Malformed or over-budget packets are dropped silently.
+   */
+  private onVoice(ws: WebSocket, message: ArrayBuffer): void {
+    const att = (ws.deserializeAttachment() as Attachment | null) ?? { seat: null };
+    if (att.seat === null || !this.room) return;
+    const buf = new Uint8Array(message);
+    if (!checkUp(buf)) return;
+    let budget = this.voiceRate.get(ws);
+    if (!budget) { budget = new VoiceBudget(); this.voiceRate.set(ws, budget); }
+    if (!budget.allow(Date.now())) return;
+    const room = this.room;
+    const down = relayDown(buf, att.seat);
+    for (const id of voiceRecipients(att.seat, (i) => room.match.combatants[i]?.team, this.sockets.keys())) {
+      try { this.sockets.get(id)?.send(down); } catch { /* socket closing */ }
+    }
   }
 
   private getGate(): AccessGate | null {

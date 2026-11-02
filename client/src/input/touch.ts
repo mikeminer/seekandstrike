@@ -18,6 +18,10 @@ export class TouchControls {
   private off: (() => void)[] = [];
   readonly buttons: Record<string, HTMLButtonElement> = {};
   getAdsScale: () => number = () => 1;
+  /** Push-to-talk (online team voice). */
+  onTalk: (down: boolean) => void = () => {};
+  setTalkVisible(v: boolean): void { if (this.buttons.talk) this.buttons.talk.style.display = v ? '' : 'none'; }
+  setTalkActive(on: boolean): void { this.buttons.talk?.classList.toggle('active', on); }
 
   constructor(parent: HTMLElement, private input: InputManager) {
     this.root = document.createElement('div');
@@ -100,6 +104,8 @@ export class TouchControls {
     btn('ads', t('btn.ads'), 'b-ads', (b) => { this.input.aimToggle = !this.input.aimToggle; b.classList.toggle('active', this.input.aimToggle); });
     btn('reload', t('btn.reload'), 'b-reload', () => this.input.press('reload'));
     btn('grenade', t('btn.grenade'), 'b-grenade', () => this.input.press('grenade'));
+    btn('talk', t('btn.talk'), 'b-talk', () => this.onTalk(true), () => this.onTalk(false));
+    this.buttons.talk!.style.display = 'none';
     btn('jump', t('btn.jump'), 'b-jump', () => this.input.press('jump'));
     btn('crouch', t('btn.crouch'), 'b-crouch', () => { this.input.stance = this.input.stance === 'crouch' ? 'stand' : 'crouch'; });
     btn('prone', t('btn.prone'), 'b-prone', () => { this.input.stance = this.input.stance === 'prone' ? 'stand' : 'prone'; });

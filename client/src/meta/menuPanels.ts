@@ -113,6 +113,8 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
       <label class="row">${m('set.aim')} <input type="range" min="0.5" max="2" step="0.05" value="${st.aimSens}" data-set="aimSens"><output>${st.aimSens.toFixed(2)}</output></label>
       <label class="row">${m('set.volume')} <input type="range" min="0" max="1" step="0.05" value="${st.volume}" data-set="volume"><output>${Math.round(st.volume * 100)}%</output></label>
       <label class="row chk"><input type="checkbox" data-set="aimAssist" ${st.aimAssist ? 'checked' : ''}> ${m('set.assist')}</label>
+      <label class="row chk"><input type="checkbox" data-set="voiceOn" ${st.voiceOn ? 'checked' : ''}> ${m('set.voice')}</label>
+      <label class="row">${m('set.voiceVol')} <input type="range" min="0" max="1" step="0.05" value="${st.voiceVolume}" data-set="voiceVolume"><output>${Math.round(st.voiceVolume * 100)}%</output></label>
       <label class="row">${m('set.diff')} <select data-set="difficulty">${(['recruit', 'regular', 'veteran'] as const).map((d) => `<option value="${d}"${d === st.difficulty ? ' selected' : ''}>${m(`set.diff.${d}`)}</option>`).join('')}</select></label>
       <div class="row col">${m('set.finish')}<div class="sws">${opts('finish', st.finish)}</div></div>
       <div class="row col">${m('set.dot')}<div class="sws">${opts('dot', st.dot)}</div></div>
@@ -138,7 +140,7 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
     const st = profile.settings as unknown as Record<string, unknown>;
     if (el.type === 'checkbox') st[k] = el.checked;
     else if (el.tagName === 'SELECT') st[k] = el.value;
-    else { st[k] = Number(el.value); const out = el.nextElementSibling; if (out) out.textContent = k === 'volume' ? `${Math.round(Number(el.value) * 100)}%` : Number(el.value).toFixed(2); }
+    else { st[k] = Number(el.value); const out = el.nextElementSibling; if (out) out.textContent = k === 'volume' || k === 'voiceVolume' ? `${Math.round(Number(el.value) * 100)}%` : Number(el.value).toFixed(2); }
     commit();
   });
   sett.addEventListener('click', (e) => {

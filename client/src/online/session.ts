@@ -31,6 +31,7 @@ export interface SessionOptions {
   onState?: (s: NetState) => void;
   onError?: (code: NetError) => void;
   onRoundEnd?: (winner: 0 | 1, restartInMs: number) => void;
+  onVoice?: (buf: ArrayBuffer) => void;
   /** Injectable for tests. */
   net?: (handlers: NetHandlers) => NetClient;
   now?: () => number;
@@ -76,6 +77,7 @@ export class OnlineSession {
       onRoundEnd: (winner: 0 | 1, restartInMs: number) => { if (session) session.roundEnd = { winner, at: now() + restartInMs }; o.onRoundEnd?.(winner, restartInMs); },
       onState: (s: NetState) => o.onState?.(s),
       onError: (c: NetError) => o.onError?.(c),
+      onVoice: (b: ArrayBuffer) => o.onVoice?.(b),
     };
     const net = o.net ? o.net(handlers) : new NetClient({
       baseUrl: o.baseUrl, room: o.room, name: o.name, cls: o.cls, now,

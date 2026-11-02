@@ -16,7 +16,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/health') {
       // `maps`: the online maps this server runs (the game only offers online play on these). Public, read-only.
-      return Response.json({ ok: true, protocol: PROTOCOL_VERSION, maps: ONLINE_MAP_IDS, leaderboard: true }, { headers: { 'cache-control': 'no-store', 'access-control-allow-origin': '*' } });
+      return Response.json({ ok: true, protocol: PROTOCOL_VERSION, maps: ONLINE_MAP_IDS, leaderboard: true, voice: true }, { headers: { 'cache-control': 'no-store', 'access-control-allow-origin': '*' } });
     }
     if (url.pathname === '/rpc') return handleRpc(request, env);
     if (url.pathname === '/leaderboard') {

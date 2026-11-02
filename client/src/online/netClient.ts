@@ -32,6 +32,8 @@ export interface NetHandlers {
   onRoundEnd?: (winner: 0 | 1, restartInMs: number) => void;
   onState?: (s: NetState) => void;
   onError?: (code: NetError) => void;
+  /** Binary team-voice packet from the server (see shared/src/voice.ts). */
+  onVoice?: (buf: ArrayBuffer) => void;
 }
 
 const ROOM_ID = /^[a-z0-9-]{4,32}$/;
@@ -85,7 +87,11 @@ export class NetClient {
       if (this.o.wallet) hello.wallet = this.o.wallet;
       ws.send(JSON.stringify(hello));
     };
-    ws.onmessage = (e: MessageEvent) => this.onMessage(typeof e.data === 'string' ? e.data : '');
+    ws.binaryType = 'arraybuffer';
+    ws.onmessage = (e: MessageEvent) => {
+      if (typeof e.data === 'string') this.onMessage(e.data);
+      else if (e.data instanceof ArrayBuffer) this.h.onVoice?.(e.data);
+    };
     ws.onerror = () => { /* followed by onclose; handled there */ };
     ws.onclose = () => { if (ws === this.ws) this.onClosed(); };
   }
@@ -174,6 +180,12 @@ export class NetClient {
     const msg: InputMessage = { t: 'input', seq, cmds };
     this.ws.send(JSON.stringify(msg));
     return true;
+  }
+
+  /** Sends one team-voice packet; dropped when the socket is not open (voice is best effort). */
+  sendVoice(packet: Uint8Array): void {
+    if (this.state !== 'open' || this.ws?.readyState !== 1) return;
+    try { this.ws.send(packet as Uint8Array<ArrayBuffer>); } catch { /* closing */ }
   }
 
   close(): void {
