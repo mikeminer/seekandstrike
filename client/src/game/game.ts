@@ -24,6 +24,7 @@ import { createSea } from '../render/environment/sea';
 import { createHills } from '../render/environment/hills';
 import { buildVegetation } from '../render/vegetation/vegetation';
 import { buildContainerDetail } from '../render/props/containerDetail';
+import { MAP_TRACKS, buildTracks } from '../render/props/tracks';
 import type { MapDef } from '@shared/map/types';
 import type { PlayerClass } from '@shared/sim/etClasses';
 import { OnlineSession, type SessionOptions } from '../online/session';
@@ -184,6 +185,8 @@ export class Game {
       if (this.opts.debug) console.info('vegetation', JSON.stringify(veg.stats));
       if (import.meta.env.DEV) (globalThis as { __scene?: THREE.Scene }).__scene = this.scene; // dev inspection only
       this.scene.add(view.group);
+      const tracks = MAP_TRACKS[loaded.id];
+      if (tracks) this.scene.add(buildTracks(tracks));
       this.scene.add(buildContainerDetail(loaded.simBoxes.flatMap((b) => (b.node?.startsWith('blk_container') || b.node?.startsWith('blk_crate') ? [{ c: b.c, s: b.s, node: b.node }] : []))));
       this.hostEl.querySelector<HTMLElement>('.blockout')?.remove(); // finished buildings, not box geometry
       if (this.opts.debug) console.info('architecture triangles', view.triangles);

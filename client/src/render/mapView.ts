@@ -146,7 +146,7 @@ function worldGeometryFromGlb(src: THREE.Mesh, tile: number): THREE.BufferGeomet
 
 /** Ground, roads, rails and seabed of an OSM pipeline map (the GLB's own non-building surfaces). */
 const GROUND_LOOKS: Record<string, LookSpec> = {
-  quayStone: { set: 'Concrete034', tile: 3, tint: 0xa39b8f },
+  quayStone: { set: 'Concrete034', tile: 3, tint: 0xc4ac8a },
   asphalt: { set: 'Asphalt031', tile: 4, tint: 0xa8a8a8 },
   concreteDark: { set: 'Concrete034', tile: 4, tint: 0x4d5354 },
   rail: { set: 'MetalPlates006', tile: 1.5, tint: 0x5e5249, metalness: 0.6 },
@@ -208,6 +208,11 @@ export function buildArchitectureMapView(gltf: GLTF, map: MapDef, simBoxes: Para
     if (!spec) return;
     const geo = worldGeometryFromGlb(src, spec.tile);
     const mat = material(assets, spec);
+    if (name in GROUND_LOOKS) {
+      // Paving is matte: at grazing angles the blue sky reflection made it look icy (owner: "tono freddo").
+      mat.roughness = Math.max(mat.roughness, 0.96);
+      mat.envMapIntensity = 0.4;
+    }
     if (opts.groundAo && name in GROUND_LOOKS && name !== 'concreteDark') {
       addLightmapUv(geo, opts.groundAo.bounds);
       mat.aoMap = opts.groundAo.texture;
