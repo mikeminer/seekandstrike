@@ -15,6 +15,7 @@ import { mountMetaMenu } from './meta/menuPanels';
 import { summaryHtml } from './meta/summary';
 import { Tutorial } from './meta/tutorial';
 import { m as mt } from './meta/strings';
+import { quickMatchRooms } from './online/quickMatch';
 
 /**
  * Entry: main menu → Daily Pass gate → offline match.
@@ -201,7 +202,19 @@ onlineBtn?.addEventListener('click', async () => {
       loadEl.textContent = t('menu.connecting');
       return r.ok ? btoa(String.fromCharCode(...r.signature)) : null;
     };
-    await game.connectOnline({ baseUrl: onlineBase, room: onlineRoom, name: onlineName, ...(pass.flow.wallet ? { wallet: pass.flow.wallet, sign } : {}) });
+    // Quick match: the requested room first, then lobby-1..lobby-N until one has a free seat.
+    const rooms = quickMatchRooms(onlineRoom, ONLINE.quickMatchRooms);
+    let joined = false;
+    for (const room of rooms) {
+      try {
+        await game.connectOnline({ baseUrl: onlineBase, room, name: onlineName, ...(pass.flow.wallet ? { wallet: pass.flow.wallet, sign } : {}) });
+        joined = true;
+        break;
+      } catch (err) {
+        if (!(err instanceof Error && err.message === 'room_full')) throw err;
+      }
+    }
+    if (!joined) throw new Error('room_full');
   } catch (e) {
     const code = e instanceof Error ? e.message : 'socket';
     const key: Record<string, string> = {

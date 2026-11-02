@@ -81,4 +81,6 @@ export function passRpcEndpoints(): string[] {
 export const ONLINE = {
   wsUrl: null as string | null,
   defaultRoom: 'lobby-1',
+  /** Quick match: rooms lobby-1..lobby-N are tried in order until one has a free seat. */
+  quickMatchRooms: 8,
 } as const;
