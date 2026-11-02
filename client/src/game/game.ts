@@ -526,6 +526,9 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
           this.camShake = Math.max(this.camShake, clamp(1 - d / 25, 0, 1));
           break;
         }
+        case 'resupply':
+          if (e.recipient === p.id && e.giver !== p.id) { this.hud.pushFeed(t('hud.resupplied', { n: e.rounds, a: m.combatants[e.giver]?.callsign ?? '' }), true); this.sfx.reload(false, 0); }
+          break;
         case 'revive':
           this.hud.pushFeed(t('hud.revived', { a: m.combatants[e.medic]!.callsign, b: m.combatants[e.patient]!.callsign }), m.combatants[e.medic]!.team === 0);
           break;

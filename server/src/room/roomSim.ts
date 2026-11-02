@@ -308,6 +308,7 @@ export class RoomSim {
       case 'grenade': this.events.push({ e: 'grenade', by: e.thrower, x: r2(e.pos.x), y: r2(e.pos.y), z: r2(e.pos.z) }); break;
       case 'explosion': this.events.push({ e: 'explosion', by: e.thrower, x: r2(e.pos.x), y: r2(e.pos.y), z: r2(e.pos.z) }); break;
       case 'revive': this.events.push({ e: 'revive', by: e.medic, vic: e.patient }); break;
+      case 'resupply': this.events.push({ e: 'resupply', by: e.giver, vic: e.recipient, n: e.rounds }); break;
       case 'objective': this.events.push({ e: 'objective', ev: e.event }); break;
       case 'wave': this.events.push({ e: 'wave', tm: e.team }); break;
       case 'matchEnd': this.events.push({ e: 'matchEnd', winner: e.winner }); break;

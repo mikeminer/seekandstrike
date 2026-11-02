@@ -16,6 +16,7 @@ export interface MatchReport {
   plants: number;
   defuses: number;
   revives: number;
+  resupplies: number;
   shots: number;
   hits: number;
   bestStreak: number;
@@ -24,10 +25,10 @@ export interface MatchReport {
 
 export const emptyReport = (): MatchReport => ({
   won: false, completed: false, kills: 0, headshots: 0, adsKills: 0, grenadeKills: 0, deaths: 0, plants: 0, defuses: 0,
-  revives: 0, shots: 0, hits: 0, bestStreak: 0, seconds: 0,
+  revives: 0, resupplies: 0, shots: 0, hits: 0, bestStreak: 0, seconds: 0,
 });
 
-export const XP = { kill: 100, headshot: 50, grenadeKill: 50, plant: 250, defuse: 250, revive: 75, win: 300, completed: 100, perMinute: 20 } as const;
+export const XP = { kill: 100, headshot: 50, grenadeKill: 50, plant: 250, defuse: 250, revive: 75, resupply: 25, win: 300, completed: 100, perMinute: 20 } as const;
 export const MAX_LEVEL = 50;
 
 /** XP needed to go from `level` to `level + 1`. */
@@ -39,7 +40,7 @@ export function levelFromXp(totalXp: number): { level: number; into: number; nee
   return { level, into: left, need: level >= MAX_LEVEL ? 0 : xpForLevel(level) };
 }
 
-export interface XpLine { key: 'kills' | 'headshots' | 'grenadeKills' | 'plants' | 'defuses' | 'revives' | 'win' | 'completed' | 'time' | 'challenges'; xp: number; count?: number }
+export interface XpLine { key: 'kills' | 'headshots' | 'grenadeKills' | 'plants' | 'defuses' | 'revives' | 'resupplies' | 'win' | 'completed' | 'time' | 'challenges'; xp: number; count?: number }
 
 export function matchXp(r: MatchReport): XpLine[] {
   const out: XpLine[] = [];
@@ -50,6 +51,7 @@ export function matchXp(r: MatchReport): XpLine[] {
   add('plants', r.plants, XP.plant);
   add('defuses', r.defuses, XP.defuse);
   add('revives', r.revives, XP.revive);
+  add('resupplies', r.resupplies, XP.resupply);
   if (r.won) out.push({ key: 'win', xp: XP.win });
   if (r.completed) out.push({ key: 'completed', xp: XP.completed });
   const minutes = Math.floor(r.seconds / 60);

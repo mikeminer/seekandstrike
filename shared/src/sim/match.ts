@@ -8,7 +8,7 @@
 import { type Combatant, type Team, createCombatant, emptyInput, eyePos } from './combatant';
 import { applyDamage, respawn, revive, tapOut, tickHealth, WaveClock } from './health';
 import { type Grenade, GRENADE, blastDamage, stepGrenade, throwGrenade } from './grenade';
-import { BOT_CLASS_ORDER, REVIVE_RADIUS, REVIVE_SECONDS, classStats } from './classStats';
+import { BOT_CLASS_ORDER, RESUPPLY, REVIVE_RADIUS, REVIVE_SECONDS, classStats } from './classStats';
 import type { PlayerClass } from './etClasses';
 import { MOVE, type Stance } from './movement';
 import { stepCombatantMovement } from './playerMove';
@@ -53,6 +53,7 @@ export type SimEvent =
   | { type: 'grenadeBounce'; pos: Vec3 }
   | { type: 'explosion'; pos: Vec3; thrower: number }
   | { type: 'revive'; medic: number; patient: number }
+  | { type: 'resupply'; giver: number; recipient: number; rounds: number }
   | { type: 'matchEnd'; winner: Team };
 
 export interface MatchOptions {
@@ -204,6 +205,7 @@ export class Match {
     this.stepGrenades(dt);
     this.stepWater();
     this.stepRevives(dt);
+    this.stepResupply();
 
     for (const c of this.combatants) {
       const was = c.health.state;
@@ -450,6 +452,28 @@ export class Match {
         this.reviveProgress.delete(c.id);
         if (revive(patient.health)) { patient.downedFor = 0; this.events.push({ type: 'revive', medic: c.id, patient: patient.id }); }
       } else this.reviveProgress.set(c.id, { patient: patient.id, t });
+    }
+  }
+
+  /** Next time (match seconds) a Field Ops may give ammo to a teammate, keyed giver:recipient. */
+  private resupplyReady = new Map<string, number>();
+
+  /** Field Ops hand a magazine to nearby teammates (and to themselves) running low on ammunition. */
+  private stepResupply(): void {
+    for (const g of this.combatants) {
+      if (!classStats(g.cls).canResupply || g.health.state !== 'alive') continue;
+      for (const r of this.combatants) {
+        if (r.team !== g.team || r.health.state !== 'alive') continue;
+        const spec = r.weapon.spec, cap = spec.magazine * spec.reserveMagazines;
+        if (r.weapon.reserve >= spec.magazine * RESUPPLY.lowMagazines || r.weapon.reserve >= cap) continue;
+        if (r.id !== g.id && distXZ(g.pos, r.pos) > RESUPPLY.radius) continue;
+        const key = `${g.id}:${r.id}`;
+        if ((this.resupplyReady.get(key) ?? 0) > this.time) continue;
+        const rounds = Math.min(spec.magazine, cap - r.weapon.reserve);
+        r.weapon.reserve += rounds;
+        this.resupplyReady.set(key, this.time + (r.id === g.id ? RESUPPLY.selfCooldown : RESUPPLY.cooldown));
+        this.events.push({ type: 'resupply', giver: g.id, recipient: r.id, rounds });
+      }
     }
   }
 

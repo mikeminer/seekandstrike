@@ -68,6 +68,7 @@ export type SnapEvent =
   | { e: 'grenade'; by: number; x: number; y: number; z: number }
   | { e: 'explosion'; by: number; x: number; y: number; z: number }
   | { e: 'revive'; by: number; vic: number }
+  | { e: 'resupply'; by: number; vic: number; n: number }
   | { e: 'objective'; ev: string }
   | { e: 'wave'; tm: 0 | 1 }
   | { e: 'matchEnd'; winner: 0 | 1 };

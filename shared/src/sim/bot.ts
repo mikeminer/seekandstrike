@@ -9,7 +9,7 @@ import type { Match } from './match';
 import { chestPos, eyePos } from './combatant';
 import { findPath, lineOfSight, nearestNode, raycastStatic } from '../map/query';
 import { GRENADE, pitchForDistance } from './grenade';
-import { classStats } from './classStats';
+import { RESUPPLY, classStats } from './classStats';
 import { findGridPath } from '../map/navgrid';
 import { OBJECTIVE } from './objective';
 import { roundsLoaded } from './weapons';
@@ -221,10 +221,28 @@ export function thinkBot(m: Match, self: Combatant, b: BotBrain, dt: number): vo
     }
   }
 
+  // Field Ops bring ammunition to a teammate running low (no enemy in sight).
+  if (classStats(self.cls).canResupply && b.mode !== 'engage' && b.mode !== 'cover') {
+    const mate = nearestLowAmmo(m, self, 30);
+    if (mate && distXZ(self.pos, mate.pos) > RESUPPLY.radius * 0.6) { moveGoal = mate.pos; urgent = true; }
+  }
+
   if (moveGoal) steer(m, self, b, moveGoal, dt, urgent && !face);
   if (!face && moveGoal && b.path.length) face = b.path[0]!;
   if (face) turnToward(self, eyePos(self), face, b, dt, b.mode === 'engage', warmupAimFactor(m.time));
   maybeThrowGrenade(m, self, b, target, targetVisible, dt);
+}
+
+function nearestLowAmmo(m: Match, self: Combatant, maxDist: number): Combatant | undefined {
+  let best: Combatant | undefined;
+  let bd = maxDist;
+  for (const o of m.combatants) {
+    if (o.team !== self.team || o.id === self.id || o.health.state !== 'alive') continue;
+    if (o.weapon.reserve >= o.weapon.spec.magazine * RESUPPLY.lowMagazines) continue;
+    const d = distXZ(self.pos, o.pos);
+    if (d < bd) { bd = d; best = o; }
+  }
+  return best;
 }
 
 function nearestDowned(m: Match, self: Combatant, maxDist: number): Combatant | undefined {

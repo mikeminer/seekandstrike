@@ -7,7 +7,7 @@ import { type MatchReport, XP, emptyReport } from './progression';
 
 export type { MatchReport };
 
-export interface ScorePopup { xp: number; label: 'kill' | 'headshot' | 'grenade' | 'plant' | 'defuse' | 'revive' | 'hit' }
+export interface ScorePopup { xp: number; label: 'kill' | 'headshot' | 'grenade' | 'plant' | 'defuse' | 'revive' | 'resupply' | 'hit' }
 
 export class MatchTracker {
   report: MatchReport = emptyReport();
@@ -42,6 +42,9 @@ export class MatchTracker {
         case 'objective':
           if (e.event === 'planted' && e.by === this.playerId) { r.plants++; out.push({ xp: XP.plant, label: 'plant' }); }
           if (e.event === 'defused' && e.by === this.playerId) { r.defuses++; out.push({ xp: XP.defuse, label: 'defuse' }); }
+          break;
+        case 'resupply':
+          if (e.giver === this.playerId && e.recipient !== this.playerId) { r.resupplies++; out.push({ xp: XP.resupply, label: 'resupply' }); }
           break;
         case 'revive':
           if (e.medic === this.playerId) { r.revives++; out.push({ xp: XP.revive, label: 'revive' }); }

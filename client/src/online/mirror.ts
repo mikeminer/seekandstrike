@@ -1,5 +1,5 @@
 import type { Snapshot, SnapEvent } from '@shared/protocol';
-import { AabbHost, Match, type SimEvent } from '@shared/sim/match';
+import { AabbHost, Match, PACE, type SimEvent } from '@shared/sim/match';
 import type { Combatant } from '@shared/sim/combatant';
 import type { MapDef } from '@shared/map/types';
 import { raycastStatic } from '@shared/map/query';
@@ -12,7 +12,8 @@ import type { GrenadePose, Pose } from './snapshots';
 
 const STANCE = ['stand', 'crouch', 'prone'] as const;
 const LIFE = ['alive', 'downed', 'dead'] as const;
-const WAVE_SECONDS: [number, number] = [20, 25];
+/** Same reinforcement pace as the server's Match (was a stale copy of the old 20/25 s). */
+const WAVE_SECONDS: [number, number] = [...PACE.waveSeconds];
 
 /** Keeps the received angles away from the local view for the player's own soldier. */
 export interface SelfView { yaw: number; pitch: number }
@@ -97,7 +98,8 @@ export class Mirror {
       w.phase = 'ready';
       w.reloadTimer = 0;
     }
-    return [...extra, ...snap.ev.map((e) => this.toSimEvent(e)).filter((e): e is SimEvent => e !== null)];
+    // Events this client does not know (from a newer server) are dropped, never passed on as undefined.
+    return [...extra, ...snap.ev.map((e) => this.toSimEvent(e)).filter((e): e is SimEvent => e != null)];
   }
 
   private toSimEvent(e: SnapEvent): SimEvent | null {
@@ -121,6 +123,7 @@ export class Mirror {
       case 'grenade': return { type: 'grenade', thrower: e.by, id: 0, pos: v3(e.x, e.y, e.z) };
       case 'explosion': return { type: 'explosion', pos: v3(e.x, e.y, e.z), thrower: e.by };
       case 'revive': return { type: 'revive', medic: e.by, patient: e.vic };
+      case 'resupply': return { type: 'resupply', giver: e.by, recipient: e.vic, rounds: e.n };
       case 'objective': return { type: 'objective', event: e.ev as Extract<SimEvent, { type: 'objective' }>['event'] };
       case 'wave': {
         m.waves[e.tm] = new WaveClock(WAVE_SECONDS[e.tm]);

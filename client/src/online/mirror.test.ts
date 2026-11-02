@@ -82,3 +82,12 @@ describe('mirror: own aim-down-sights blend (online)', () => {
     expect(mir.match.combatants[0]!.weapon.ads).toBe(0);
   });
 });
+
+describe('mirror: events from a newer server', () => {
+  it('unknown snapshot events are dropped, never passed on as undefined; resupply maps through', () => {
+    const mir = new Mirror(PORTO_ARDESIA, 0);
+    const evs = mir.applyState(snap([player(0), player(1)], [{ e: 'futureThing' } as never, { e: 'resupply', by: 1, vic: 0, n: 30 }]));
+    expect(evs.every((e) => e && typeof e.type === 'string')).toBe(true);
+    expect(evs.filter((e) => e.type === 'resupply')).toEqual([{ type: 'resupply', giver: 1, recipient: 0, rounds: 30 }]);
+  });
+});
