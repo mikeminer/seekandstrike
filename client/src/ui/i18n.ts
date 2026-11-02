@@ -2,8 +2,8 @@
 const IT = {
   'menu.subtitle': 'Offline contro bot',
   'menu.play': 'Gioca (offline vs bot)',
-  'menu.passRequired': 'Daily Pass richiesto',
-  'menu.passInfo': 'Tutto il gioco, incluso l\'offline contro i bot, richiede un Daily Pass attivo.',
+  'menu.passRequired': 'Daily Pass',
+  'menu.passInfo': 'Il Daily Pass sblocca le partite senza limiti e l\'online. Ogni giorno hai una partita gratuita contro i bot.',
   'menu.controlsDesktop': 'WASD muovi · Mouse mira · Clic sinistro fuoco · Clic destro mira di precisione · R ricarica · Shift scatto · Spazio salto · C accovacciato · Z a terra · E (tieni) piazza/disinnesca · F arrenditi da ferito · Invio ricomincia',
   'menu.controlsTouch': 'Stick sinistro muovi · trascina a destra per guardare · pulsanti FUOCO, MIRA, RICARICA, SALTO, ACCOV., A TERRA, AZIONE',
   'menu.loading': 'Caricamento',
@@ -36,8 +36,8 @@ type Key = keyof typeof IT;
 const EN: Record<Key, string> = {
   'menu.subtitle': 'Offline vs bots',
   'menu.play': 'Play (offline vs bots)',
-  'menu.passRequired': 'Daily Pass required',
-  'menu.passInfo': 'The whole game, including offline vs bots, requires an active Daily Pass.',
+  'menu.passRequired': 'Daily Pass',
+  'menu.passInfo': 'The Daily Pass unlocks unlimited matches and online. Every day you get one free match against bots.',
   'menu.controlsDesktop': 'WASD move · Mouse look · LMB fire · RMB aim · R reload · Shift sprint · Space jump · C crouch · Z prone · Hold E plant/defuse · F tap out when downed · Enter restart',
   'menu.controlsTouch': 'Left stick move · drag right side to look · FIRE, AIM, RELOAD, JUMP, CROUCH, PRONE, ACTION buttons',
   'menu.loading': 'Loading', 'menu.sponsor': 'Sponsor',

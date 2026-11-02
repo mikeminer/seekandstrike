@@ -40,6 +40,19 @@ export const DEFAULT_SKILL: BotSkill = {
   fovCos: Math.cos((115 / 2) * Math.PI / 180),
 };
 
+/**
+ * Difficulty presets. Attacker bots (the player's team) always use the regular skill so the team stays useful;
+ * the preset changes the defenders, who are the player's opponents.
+ */
+export function skillFor(d: 'recruit' | 'regular' | 'veteran', playerTeam: boolean): BotSkill {
+  if (playerTeam || d === 'regular') return { ...DEFAULT_SKILL, reactionMin: 0.45, reactionMax: 0.85, aimErrorStart: 0.11 };
+  if (d === 'recruit') return { ...DEFAULT_SKILL, reactionMin: 0.65, reactionMax: 1.15, aimErrorStart: 0.15, aimErrorFloor: 0.022, aimSettleSeconds: 2.4, turnRate: 3.6, viewDistance: 60 };
+  return { ...DEFAULT_SKILL };
+}
+
+/** Opening of a round: bots aim worse for the first 20 s (factor 1.6 → 1) so nobody is cut down while getting oriented. */
+export const warmupAimFactor = (time: number): number => 1 + 0.6 * Math.max(0, 1 - time / 20);
+
 export interface BotBrain {
   mode: BotMode;
   skill: BotSkill;
@@ -210,7 +223,7 @@ export function thinkBot(m: Match, self: Combatant, b: BotBrain, dt: number): vo
 
   if (moveGoal) steer(m, self, b, moveGoal, dt, urgent && !face);
   if (!face && moveGoal && b.path.length) face = b.path[0]!;
-  if (face) turnToward(self, eyePos(self), face, b, dt, b.mode === 'engage');
+  if (face) turnToward(self, eyePos(self), face, b, dt, b.mode === 'engage', warmupAimFactor(m.time));
   maybeThrowGrenade(m, self, b, target, targetVisible, dt);
 }
 
@@ -260,7 +273,7 @@ function perceive(m: Match, self: Combatant, b: BotBrain): void {
   const recentlyHit = self.health.sinceDamage < 1.0;
   let best = -1, bestD = Infinity;
   for (const o of m.combatants) {
-    if (o.team === self.team || o.health.state !== 'alive') continue;
+    if (o.team === self.team || o.health.state !== 'alive' || o.spawnShield > 0) continue;
     const tp = chestPos(o);
     const d = dist(eye, tp);
     if (d > b.skill.viewDistance) continue;
@@ -298,13 +311,13 @@ function fireControl(m: Match, self: Combatant, b: BotBrain, t: Combatant, dt: n
   }
 }
 
-function turnToward(self: Combatant, eye: Vec3, p: Vec3, b: BotBrain, dt: number, withError: boolean): void {
+function turnToward(self: Combatant, eye: Vec3, p: Vec3, b: BotBrain, dt: number, withError: boolean, errScale = 1): void {
   const dx = p.x - eye.x, dy = p.y - eye.y, dz = p.z - eye.z;
   let yaw = Math.atan2(-dx, -dz);
   let pitch = Math.atan2(dy, Math.hypot(dx, dz));
   if (withError) {
     const k = Math.max(0, 1 - b.trackTime / b.skill.aimSettleSeconds);
-    const err = b.skill.aimErrorFloor + (b.skill.aimErrorStart - b.skill.aimErrorFloor) * k;
+    const err = (b.skill.aimErrorFloor + (b.skill.aimErrorStart - b.skill.aimErrorFloor) * k) * errScale;
     yaw += b.aimErrX * err;
     pitch += b.aimErrY * err * 0.6;
     // Compensate own recoil like a trained shooter (partially).

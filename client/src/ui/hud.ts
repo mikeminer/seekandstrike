@@ -17,6 +17,10 @@ export class Hud {
   private hurtT = 0;
   private feed: { text: string; cls: string; t: number }[] = [];
   onRestart: () => void = () => {};
+  onMenu: () => void = () => {};
+  onTutorialSkip: () => void = () => {};
+  private dmgT = 0;
+  private pops: { el: HTMLElement; t: number }[] = [];
 
   constructor(parent: HTMLElement) {
     this.root = document.createElement('div');
@@ -31,21 +35,56 @@ export class Hud {
       <div class="feed" data-k="feed"></div>
       <div class="cross" data-k="cross"><i class="h" data-k="cl"></i><i class="h" data-k="cr"></i><i class="v" data-k="cu"></i><i class="v" data-k="cd"></i><i class="dot"></i></div>
       <div class="hitm" data-k="hitm"></div>
+      <div class="dmgdir" data-k="dmgdir"><i></i></div>
+      <div class="pops" data-k="pops"></div>
+      <div class="tut" data-k="tut" hidden><span data-k="tutT"></span><button data-k="tutSkip"></button></div>
       <div class="marker" data-k="marker"><b></b><span data-k="mdist"></span></div>
       <div class="prompt" data-k="prompt" hidden></div>
       <div class="overlay" data-k="down" hidden><h2>${t('hud.downed')}</h2><div data-k="downT"></div><div class="small">${t('hud.downedHint')}</div></div>
       <div class="overlay" data-k="dead" hidden><h2>${t('hud.dead')}</h2><div data-k="deadT"></div></div>
       <div class="overlay end" data-k="end" hidden><h2 data-k="endTitle"></h2><div data-k="endWhy"></div><div class="small" data-k="endStats"></div>
+        <div data-k="endSum"></div>
         <div class="countdown" data-k="endNext" hidden></div>
-        <button data-k="restart">${t('end.restart')}</button></div>
+        <div class="endbtns"><button data-k="restart">${t('end.restart')}</button><button class="ghost" data-k="toMenu" hidden></button></div></div>
       <div class="blockout">${t('blockout')}</div>
       <div class="debug" data-k="debug" hidden></div>`;
     for (const n of this.root.querySelectorAll<HTMLElement>('[data-k]')) this.el[n.dataset.k!] = n;
     this.el.restart!.addEventListener('pointerdown', (e) => { e.stopPropagation(); this.onRestart(); });
+    this.el.toMenu!.addEventListener('pointerdown', (e) => { e.stopPropagation(); this.onMenu(); });
+    this.el.tutSkip!.addEventListener('pointerdown', (e) => { e.stopPropagation(); this.onTutorialSkip(); });
     parent.appendChild(this.root);
   }
 
-  hitMarker(kill: boolean): void { this.hitT = 0.18; this.el.hitm!.classList.toggle('kill', kill); }
+  hitMarker(kill: boolean, head = false): void {
+    this.hitT = kill ? 0.32 : 0.18;
+    this.el.hitm!.classList.toggle('kill', kill);
+    this.el.hitm!.classList.toggle('head', head);
+    // Restart the pop animation.
+    this.el.hitm!.classList.remove('pop'); void this.el.hitm!.offsetWidth; this.el.hitm!.classList.add('pop');
+  }
+  /** Damage direction: angle of the attacker relative to where the player looks (rad, 0 = ahead, + = right). */
+  hurtFrom(angle: number): void { this.dmgT = 1; (this.el.dmgdir!.firstElementChild as HTMLElement).style.transform = `rotate(${angle}rad)`; }
+  /** Score popup under the crosshair ("+100 ABBATTUTO"). */
+  popup(text: string, xp: number, kind: string): void {
+    const el = document.createElement('div');
+    el.className = `pop ${kind}`;
+    el.innerHTML = `${xp > 0 ? `<b>+${xp}</b> ` : ''}${text}`;
+    this.el.pops!.prepend(el);
+    this.pops.push({ el, t: 1.6 });
+    while (this.pops.length > 4) this.pops.shift()!.el.remove();
+  }
+  set tutorial(text: string | null) {
+    this.el.tut!.hidden = text === null;
+    if (text !== null && this.el.tutT!.textContent !== text) this.el.tutT!.textContent = text;
+  }
+  set tutorialSkipLabel(v: string) { this.el.tutSkip!.textContent = v; }
+  /** End-of-match summary HTML (empty to clear) and the label of the back-to-menu button (null hides it). */
+  setSummary(html: string, menuLabel: string | null, againLabel?: string): void {
+    this.el.endSum!.innerHTML = html;
+    this.el.toMenu!.hidden = menuLabel === null;
+    if (menuLabel !== null) this.el.toMenu!.textContent = menuLabel;
+    this.el.restart!.textContent = againLabel ?? t('end.restart');
+  }
   hurt(): void { this.hurtT = 0.6; }
   pushFeed(text: string, good: boolean): void { this.feed.unshift({ text, cls: good ? 'a' : 'd', t: 5 }); this.feed.length = Math.min(this.feed.length, 5); }
 
@@ -90,6 +129,10 @@ export class Hud {
     this.hitT = Math.max(0, this.hitT - dt);
     e.hitm!.style.opacity = this.hitT > 0 ? '1' : '0';
     this.hurtT = Math.max(0, this.hurtT - dt);
+    this.dmgT = Math.max(0, this.dmgT - dt * 1.2);
+    e.dmgdir!.style.opacity = String(this.dmgT);
+    for (const pp of this.pops) { pp.t -= dt; if (pp.t < 0.4) pp.el.style.opacity = String(Math.max(0, pp.t / 0.4)); }
+    this.pops = this.pops.filter((pp) => { if (pp.t <= 0) { pp.el.remove(); return false; } return true; });
     e.vig!.style.opacity = String(Math.max(this.hurtT * 1.4, p.health.state === 'downed' ? 0.9 : (100 - hp) / 140));
 
     const obj = m.map.objective;

@@ -8,7 +8,7 @@ import { locale } from '../../ui/i18n';
 const IT = {
   title: 'Daily Pass',
   offer: 'Ottieni il Daily Pass — 0,01 SOL per 1 giorno',
-  offerShort: 'Il Daily Pass apre tutto il gioco, offline contro bot incluso, per 1 giorno.',
+  offerShort: 'Il Daily Pass apre partite senza limiti e il gioco online per 1 giorno.',
   offerExpired: 'Il tuo Daily Pass è terminato.',
   partial: 'Lettura parziale: alcuni pass potrebbero non essere visibili. Riprova tra poco.',
   connect: 'Connetti wallet',
@@ -114,7 +114,7 @@ type Key = keyof typeof IT;
 const EN: Record<Key, string> = {
   title: 'Daily Pass',
   offer: 'Get the Daily Pass — 0.01 SOL for 1 day',
-  offerShort: 'The Daily Pass opens the whole game, offline vs bots included, for 1 day.',
+  offerShort: 'The Daily Pass opens unlimited matches and online for 1 day.',
   offerExpired: 'Your Daily Pass has ended.',
   partial: 'Partial read: some passes may not be visible. Try again shortly.',
   connect: 'Connect wallet',

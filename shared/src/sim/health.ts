@@ -8,7 +8,7 @@ export type LifeState = 'alive' | 'downed' | 'dead';
 export const HEALTH = {
   max: 100,
   /** Seconds a downed soldier stays revivable before bleeding out. */
-  bleedOutSeconds: 20,
+  bleedOutSeconds: 12,
   /** Additional damage to a downed body that finishes it (reference "gib" threshold, scaled). */
   finishDamage: 50,
   /** Health restored by a revive (reference: 50%). */

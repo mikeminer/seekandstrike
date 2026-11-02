@@ -59,6 +59,8 @@ export interface Combatant {
   prevThrow: boolean;
   /** Server only: how far behind the server the shooter's view was on the last command (s, already clamped). */
   lag: number;
+  /** Spawn protection left (s): no damage and bots ignore this soldier. Ends early when it fires. */
+  spawnShield: number;
 }
 
 export function createCombatant(id: number, team: Team, isBot: boolean, callsign: string, cls: PlayerClass = PlayerClass.Soldier): Combatant {
@@ -70,7 +72,7 @@ export function createCombatant(id: number, team: Team, isBot: boolean, callsign
     health: createHealth(),
     input: emptyInput(),
     kills: 0, deaths: 0, sinceShot: 99, speed: 0, downedFor: 0,
-    cls, grenades: classStats(cls).grenades, grenadeCooldown: 0, prevThrow: false, lag: 0,
+    cls, grenades: classStats(cls).grenades, grenadeCooldown: 0, prevThrow: false, lag: 0, spawnShield: 0,
   };
 }
 

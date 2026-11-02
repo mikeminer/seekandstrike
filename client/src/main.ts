@@ -9,11 +9,18 @@ import { installAutomation } from './dev/automation';
 import { createPass } from './pass/ui/setup';
 import { mountSponsorCard } from './sponsor/card';
 import type { PlayerClass } from '@shared/sim/etClasses';
+import { loadProfile, saveProfile, freeMatchAvailable, useFreeMatch } from './meta/profileStore';
+import { applyMatch } from './meta/progression';
+import { mountMetaMenu } from './meta/menuPanels';
+import { summaryHtml } from './meta/summary';
+import { Tutorial } from './meta/tutorial';
+import { m as mt } from './meta/strings';
 
 /**
  * Entry: main menu → Daily Pass gate → offline match.
- * The ENTIRE game (offline vs bots included) is behind the Daily Pass (brief §9). Play is enabled
- * only while the on-chain pass read says it is active. Development builds (`vite` /
+ * The Daily Pass unlocks unlimited play and online. Without it, one free offline match per day
+ * (owner decision 2026-11-02, replacing brief §9 "the entire game behind the pass"). Unlimited play
+ * is enabled only while the on-chain pass read says it is active. Development builds (`vite` /
  * `--mode devbypass`) compile a clearly labelled bypass, disabled when `?mockpass=` is used so the
  * real gate is exercised against the mock wallet.
  */
@@ -65,6 +72,7 @@ menu.innerHTML = `<div class="card">
   <p>${t('menu.subtitle')}</p>
   <div class="gate"><b>${t('menu.passRequired')}</b><br>${t('menu.passInfo')}</div>
   <div data-pass></div>
+  <div class="free" data-free hidden></div>
   <div data-dev></div>
   <label class="classpick">${t('menu.map')} <select data-map>${(Object.keys(MAPS) as MapId[]).map((id) => `<option value="${id}"${id === chosenMap ? ' selected' : ''}>${t(MAPS[id].nameKey as never)}</option>`).join('')}</select></label>
   <div class="small classdesc">${mapInfo.online ? '' : t('map.offlineOnly')}${mapInfo.attribution ? ` ${esc(mapInfo.attribution)}` : ''}</div>
@@ -105,15 +113,32 @@ if (__DEV_PASS_BYPASS__) {
     ? '<span class="dev">DEV BUILD · Mock wallet: nessuna firma, nessun invio / no signing, no sending</span>'
     : '<span class="dev">DEV BUILD · Daily Pass bypass attivo / active — non per release</span>';
 }
+// Profile: progression, challenges, settings (device storage).
+const profile = loadProfile();
+const freeEl = menu.querySelector<HTMLElement>('[data-free]')!;
+/** True while the current match is the free one of the day (no pass). */
+let freeRun = false;
+const canPlay = (): boolean => passActive() || freeMatchAvailable(profile);
+const metaMenu = mountMetaMenu(menu.querySelector<HTMLElement>('.card')!, profile, {
+  onSettings: (st) => game.applySettings(st),
+  onReplayTutorial: () => { /* profile.tutorialDone is now false: the next match shows it */ },
+});
+
 let loaded = false;
 const gateEl = menu.querySelector<HTMLElement>('.gate');
 const onlineBtn = menu.querySelector<HTMLButtonElement>('[data-online]');
 const syncPlay = (): void => {
-  playBtn.disabled = !(loaded && passActive());
-  if (onlineBtn) onlineBtn.disabled = !(loaded && passActive());
-  if (gateEl) gateEl.hidden = passActive();
+  const pass = passActive();
+  const free = !pass && freeMatchAvailable(profile);
+  playBtn.disabled = !(loaded && canPlay());
+  playBtn.textContent = free ? mt('free.play') : t('menu.play');
+  if (onlineBtn) onlineBtn.disabled = !(loaded && pass);
+  if (gateEl) gateEl.hidden = pass;
+  freeEl.hidden = pass;
+  freeEl.textContent = free ? mt('free.available') : mt('free.used');
 };
 const passApp = createPass(params, (open) => { passOpen = open; syncPlay(); });
+
 void passApp.then((p) => { menu.querySelector('[data-pass]')!.replaceWith(p.panel.el); });
 
 const renderer = createRenderer(app);
@@ -121,6 +146,16 @@ const game = new Game(renderer, app, {
   seed: Number(params.get('seed') ?? 0) || (Date.now() >>> 0),
   attackers: 5, defenders: 6, touch: isTouch, debug: params.has('debug') || __DEV_PASS_BYPASS__, playerClass: chosenClass, mapId: chosenMap,
 });
+game.applySettings(profile.settings);
+game.onMatchEnd = (report) => {
+  const res = applyMatch(profile, report, new Date());
+  saveProfile(profile);
+  metaMenu.refresh();
+  game.showSummary(summaryHtml(res), mt('sum.menu'), mt('sum.again'));
+  if (res.after.level > res.before.level) game.sfx.levelUp(); else if (res.completedChallenges.length) game.sfx.challenge();
+};
+game.onTutorialDone = () => { profile.tutorialDone = true; saveProfile(profile); };
+game.onMenu = () => showMenu();
 const resize = (): void => game.resize(app.clientWidth, app.clientHeight);
 window.addEventListener('resize', resize);
 resize();
@@ -137,7 +172,10 @@ game.load((f) => { loadEl.textContent = `${t('menu.loading')} ${Math.round(f * 1
   .catch((e: unknown) => { loadEl.textContent = 'Errore di caricamento / load error'; console.error(e); });
 
 playBtn.addEventListener('click', () => {
-  if (!loaded || !passActive()) return;
+  if (!loaded || !canPlay()) return;
+  freeRun = !passActive();
+  if (freeRun) { useFreeMatch(profile); needsNewMatch = true; }
+  if (!profile.tutorialDone) game.tutorial = new Tutorial();
   game.sfx.unlock();
   menu.remove();
   resize();
@@ -191,11 +229,13 @@ function showMenu(): void {
   game.stop();
   document.exitPointerLock?.();
   if (!menu.isConnected) document.body.appendChild(menu);
+  metaMenu.refresh();
+  syncPlay();
   void passApp.then((p) => p.flow.refresh());
 }
 // A new round needs a live pass; the current round is never interrupted.
 const restartRound = game.restart.bind(game);
-game.restart = (): void => { if (passActive()) restartRound(); else showMenu(); };
+game.restart = (): void => { if (passActive()) restartRound(); else { freeRun = false; showMenu(); } };
 
 // Re-read the pass when the app comes back to the front (expiry, a pass bought elsewhere).
 document.addEventListener('visibilitychange', () => {

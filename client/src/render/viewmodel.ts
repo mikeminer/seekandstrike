@@ -125,14 +125,17 @@ export class Viewmodel {
     ]);
     optic!.dispose();
     irons!.dispose();
+    // Own copy of the rifle material: the cosmetic tint must not change the soldiers' third-person rifles.
+    const ownMat = t((src.material as THREE.Material).clone());
     const part = (g: THREE.BufferGeometry, parent: THREE.Object3D, pre?: THREE.Matrix4): THREE.Mesh => {
-      const m = new THREE.Mesh(t(g), src.material);
+      const m = new THREE.Mesh(t(g), ownMat);
       m.matrixAutoUpdate = false;
       m.matrix.copy(src.matrixWorld);
       if (pre) m.matrix.premultiply(pre);
       parent.add(m);
       return m;
     };
+    this.rifleMats = [ownMat];
     part(body!, this.rifleR);
     const unpivot = new THREE.Matrix4().makeTranslation(-MAG_PIVOT_R.x, -MAG_PIVOT_R.y, -MAG_PIVOT_R.z);
     this.mag.position.copy(MAG_PIVOT_R); this.rifleR.add(this.mag);
@@ -145,6 +148,7 @@ export class Viewmodel {
     const metal = t(new THREE.MeshStandardMaterial({ color: 0x1f2124, roughness: 0.42, metalness: 0.75, side: THREE.DoubleSide }));
     const glass = t(new THREE.MeshStandardMaterial({ color: 0x223040, roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.3 }));
     const dot = t(new THREE.MeshBasicMaterial({ color: 0xff3020 }));
+    this.dotMat = dot;
     const tubeR = 0.019 / S, tubeL = 0.05 / S;
     const tube = new THREE.Mesh(t(new THREE.CylinderGeometry(tubeR, tubeR, tubeL, 24, 1, true).rotateZ(Math.PI / 2)), metal);
     tube.position.copy(OPTIC_R); this.rifleR.add(tube);
@@ -199,6 +203,14 @@ export class Viewmodel {
     this.rifleR.add(this.flash);
     this.flash.position.copy(muzzle);
     this.flash.scale.setScalar(0.12 / S);
+  }
+
+  private dotMat: THREE.MeshBasicMaterial | null = null;
+  private rifleMats: THREE.Material[] = [];
+  /** Cosmetic unlocks: rifle finish (albedo tint) and red-dot colour. */
+  setCosmetics(tint: number, dot: number): void {
+    for (const mat of this.rifleMats) if ('color' in mat) (mat as THREE.MeshStandardMaterial).color.setHex(tint);
+    this.dotMat?.color.setHex(dot);
   }
 
   /** Diagnostics: current rig pose (camera space). */

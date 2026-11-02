@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import { FixedStepper } from '@shared/fixedStep';
 import { CLIENT_SIM_HZ } from '@shared/constants';
-import { Match, type SimEvent } from '@shared/sim/match';
+import { Match, type Difficulty, type SimEvent } from '@shared/sim/match';
+import { MatchTracker } from '../meta/tracker';
+import type { MatchReport, Settings } from '../meta/progression';
+import { UNLOCKS } from '../meta/progression';
+import { Tutorial } from '../meta/tutorial';
+import { m as mt } from '../meta/strings';
+import { wrapAngle } from '@shared/sim/vec';
 import { PORTO_ARDESIA } from '@shared/map/portoArdesia';
 import { OBJECTIVE } from '@shared/sim/objective';
 import { classStats, REVIVE_RADIUS } from '@shared/sim/classStats';
@@ -17,6 +23,7 @@ import { createSkyDome, environmentFromSky, hazeColor, lateAfternoonSky, sunDire
 import { createSea } from '../render/environment/sea';
 import { createHills } from '../render/environment/hills';
 import { buildVegetation } from '../render/vegetation/vegetation';
+import { buildContainerDetail } from '../render/props/containerDetail';
 import type { MapDef } from '@shared/map/types';
 import type { PlayerClass } from '@shared/sim/etClasses';
 import { OnlineSession, type SessionOptions } from '../online/session';
@@ -36,7 +43,7 @@ import { DEFAULT_QUALITY_TIERS, createQualityGovernor, observeFrame, type Govern
 /** Sun direction measured from the bundled HDRI's brightest texel (elevation ~48°). */
 const SUN_DIR = new THREE.Vector3(0.555, 0.743, 0.374).normalize();
 
-export interface GameOptions { seed: number; attackers: number; defenders: number; touch: boolean; debug: boolean; playerClass?: PlayerClass; mapId?: MapId; }
+export interface GameOptions { seed: number; attackers: number; defenders: number; touch: boolean; debug: boolean; playerClass?: PlayerClass; mapId?: MapId; difficulty?: Difficulty; }
 
 export class Game {
   readonly scene = new THREE.Scene();
@@ -85,6 +92,22 @@ export class Game {
   private grenadeGeo = new THREE.SphereGeometry(0.05, 10, 8);
   private grenadeMat = new THREE.MeshStandardMaterial({ color: 0x2f3a28, roughness: 0.6, metalness: 0.35 });
   private lastLook = { dx: 0, dy: 0 };
+  /** Per-match report of the local player (XP, challenges, stats). */
+  private tracker: MatchTracker | null = null;
+  private endReported = false;
+  /** Called once when a round ends with the local player's report. */
+  onMatchEnd: (r: MatchReport) => void = () => {};
+  onMenu: () => void = () => {};
+  onTutorialDone: () => void = () => {};
+  /** End-of-round summary in the HUD. */
+  showSummary(html: string, menuLabel: string, againLabel: string): void { this.hud.setSummary(html, menuLabel, againLabel); }
+  /** First-match tutorial (null when done). */
+  tutorial: Tutorial | null = null;
+  private tutAcc = { moved: 0, looked: 0, shots: 0 };
+  private sens = { look: 1, aim: 1, assist: true };
+  /** Aim-assist slowdown applied to touch look this frame (1 = none). */
+  private assist = 1;
+  private stepDist = new Map<number, number>();
   private hostEl: HTMLElement;
 
   constructor(private renderer: THREE.WebGLRenderer, parent: HTMLElement, private opts: GameOptions) {
@@ -93,9 +116,12 @@ export class Game {
     this.input = new InputManager(renderer.domElement);
     this.hud = new Hud(parent);
     this.hud.onRestart = () => this.restart();
+    this.hud.onMenu = () => this.onMenu();
+    this.hud.onTutorialSkip = () => { this.tutorial?.skip(); this.hud.tutorial = null; this.tutorial = null; this.onTutorialDone(); };
+    this.hud.tutorialSkipLabel = mt('tut.skip');
     if (opts.touch) {
       this.touch = new TouchControls(parent, this.input);
-      this.touch.getAdsScale = () => (this.match?.player?.weapon.ads ?? 0) > 0.5 ? LOOK.adsScale : 1;
+      this.touch.getAdsScale = () => this.lookScale(true);
     }
     const unlock = (): void => this.sfx.unlock();
     parent.addEventListener('pointerdown', unlock, { once: false, passive: true });
@@ -158,6 +184,7 @@ export class Game {
       if (this.opts.debug) console.info('vegetation', JSON.stringify(veg.stats));
       if (import.meta.env.DEV) (globalThis as { __scene?: THREE.Scene }).__scene = this.scene; // dev inspection only
       this.scene.add(view.group);
+      this.scene.add(buildContainerDetail(loaded.simBoxes.flatMap((b) => (b.node?.startsWith('blk_container') || b.node?.startsWith('blk_crate') ? [{ c: b.c, s: b.s, node: b.node }] : []))));
       this.hostEl.querySelector<HTMLElement>('.blockout')?.remove(); // finished buildings, not box geometry
       if (this.opts.debug) console.info('architecture triangles', view.triangles);
     } else {
@@ -173,6 +200,7 @@ export class Game {
     try { this.ragdolls = new RagdollSystem(this.map); } catch { this.ragdolls = null; }
     this.factory = new SoldierFactory(this.models, this.ragdolls);
     this.viewmodel = new Viewmodel(1, env, this.models, this.effects.flashTexture);
+    if (this.pendingCosmetics) this.viewmodel.setCosmetics(this.pendingCosmetics.tint, this.pendingCosmetics.dot);
     this.scene.add(this.camera);
     await this.newMatch();
     onProgress(1);
@@ -186,7 +214,11 @@ export class Game {
     this.physics = await createPhysicsWorld(this.map, this.stepper.stepSeconds);
     for (const g of this.grenadeMeshes.values()) g.removeFromParent();
     this.grenadeMeshes.clear();
-    this.match = new Match(this.map, { seed: this.opts.seed, attackers: this.opts.attackers, defenders: this.opts.defenders, withPlayer: true, ...(this.opts.playerClass !== undefined ? { playerClass: this.opts.playerClass } : {}) }, this.physics);
+    this.match = new Match(this.map, { seed: this.opts.seed, attackers: this.opts.attackers, defenders: this.opts.defenders, withPlayer: true, difficulty: this.opts.difficulty ?? 'regular', ...(this.opts.playerClass !== undefined ? { playerClass: this.opts.playerClass } : {}) }, this.physics);
+    this.tracker = new MatchTracker(this.match.playerId, 0);
+    this.endReported = false;
+    this.hud.setSummary('', null);
+    this.stepDist.clear();
     this.ensureSoldierViews();
     const p = this.match.player!;
     this.prevPos.set(p.id, { ...p.pos });
@@ -236,6 +268,8 @@ export class Game {
     this.online?.close();
     this.online = session;
     this.match = session.mirror.match;
+    this.tracker = new MatchTracker(this.match.playerId, this.match.player?.team ?? 0);
+    this.endReported = false;
     for (const g of this.grenadeMeshes.values()) g.removeFromParent();
     this.grenadeMeshes.clear();
     this.ensureSoldierViews();
@@ -249,6 +283,24 @@ export class Game {
   get isOnline(): boolean { return this.online !== null; }
   /** Dev tooling: the live online session (prediction stats, buffers). */
   get onlineSession(): OnlineSession | null { return this.online; }
+
+  /** Look multiplier: hip or aimed sensitivity from the settings, times the touch aim assist. */
+  private lookScale(touch: boolean): number {
+    const ads = (this.match?.player?.weapon.ads ?? 0) > 0.5;
+    const base = ads ? LOOK.adsScale * this.sens.aim : this.sens.look;
+    return base * (touch ? this.assist : 1);
+  }
+
+  /** Settings from the profile: sensitivities, aim assist, volume, rifle finish and dot colour, bot difficulty (next match). */
+  applySettings(st: Settings): void {
+    this.sens = { look: st.lookSens, aim: st.aimSens, assist: st.aimAssist };
+    this.sfx.setVolume(st.volume);
+    this.opts.difficulty = st.difficulty;
+    const fin = UNLOCKS.find((u) => u.id === st.finish), dot = UNLOCKS.find((u) => u.id === st.dot);
+    this.viewmodel?.setCosmetics(fin?.tint ?? 0xffffff, dot?.dot ?? 0xff3020);
+    this.pendingCosmetics = { tint: fin?.tint ?? 0xffffff, dot: dot?.dot ?? 0xff3020 };
+  }
+  private pendingCosmetics: { tint: number; dot: number } | null = null;
 
   /** Class of the local player; takes effect when the next match starts. */
   setPlayerClass(c: PlayerClass): void { this.opts.playerClass = c; }
@@ -309,11 +361,12 @@ export class Game {
     const look = this.input.takeLook();
     const adsScale = p.weapon.ads > 0.5 ? LOOK.adsScale : 1;
     if (p.health.state === 'alive' && m.phase === 'playing') {
-      const s = this.touch ? 1 : adsScale; // touch applies ADS scale at the source
+      const s = this.touch ? 1 : adsScale * (p.weapon.ads > 0.5 ? this.sens.aim : this.sens.look); // touch applies its scale at the source
       p.yaw -= look.dx * s;
       p.pitch = clamp(p.pitch - look.dy * s, -1.45, 1.45);
     }
     this.lastLook = look;
+    this.tutAcc.looked += Math.abs(look.dx) + Math.abs(look.dy);
 
     let alpha = 1;
     if (this.online) {
@@ -336,6 +389,7 @@ export class Game {
     }
     const dt = Math.min(0.1, frameMs / 1000);
     this.updateView(alpha, dt);
+    this.metaFrame(dt);
     if (__DEV_PASS_BYPASS__ && this.opts.debug) {
       // DEV aim trace → logcat (Capacitor/Console): one row per frame, flushed every 60 frames.
       const w = p.weapon, rp = this.viewmodel.rigPose();
@@ -363,6 +417,13 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
   private handleEvents(events: SimEvent[]): void {
     const m = this.match;
     const p = m.player!;
+    if (this.tracker) {
+      for (const pop of this.tracker.onEvents(events, p.weapon.ads)) {
+        if (pop.label === 'hit') continue;
+        this.hud.popup(mt(`pop.${pop.label}`), pop.xp, pop.label);
+      }
+    }
+    for (const e of events) if (e.type === 'shot' && e.shooter === p.id) this.tutAcc.shots++;
     const listener = p.pos;
     const panOf = (pt: Vec3): number => {
       const dx = pt.x - listener.x, dz = pt.z - listener.z;
@@ -386,9 +447,15 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
         }
         case 'damage': {
           const victim = m.combatants[e.victim]!, attacker = m.combatants[e.attacker]!;
-          if (e.attacker === p.id) {
-            this.hud.hitMarker(e.outcome === 'downed' || e.outcome === 'killed');
+          if (e.attacker === p.id && e.victim !== p.id) {
+            const down = e.outcome === 'downed' || e.outcome === 'killed';
+            this.hud.hitMarker(down, e.zone === 'head');
             this.sfx.hit(e.zone === 'head');
+            if (e.outcome === 'downed') this.sfx.takedown(e.zone === 'head');
+          }
+          if (e.victim === p.id && e.attacker !== p.id) {
+            const ang = Math.atan2(-(attacker.pos.x - p.pos.x), -(attacker.pos.z - p.pos.z));
+            this.hud.hurtFrom(-wrapAngle(ang - p.yaw));
           }
           const sv = this.soldiers.get(e.victim);
           if (sv) {
@@ -439,6 +506,57 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     if (o.charge === 'armed' || o.charge === 'defusing') {
       this.beepT -= this.stepper.stepSeconds; // handleEvents runs once per sim step
       if (this.beepT <= 0) { this.sfx.beep(o.fuse < 10); this.beepT = o.fuse < 10 ? 0.5 : 1; }
+    }
+  }
+
+  /** Per-frame meta layer: play time, end-of-round report, tutorial prompts, footsteps, touch aim assist. */
+  private metaFrame(dt: number): void {
+    const m = this.match, p = m.player;
+    if (!p) return;
+    const playing = m.phase === 'playing';
+    this.tracker?.tick(dt, playing, p.health.state !== 'alive');
+    if (!playing && this.tracker && !this.endReported) { this.endReported = true; this.onMatchEnd(this.tracker.report); }
+
+    // Tutorial.
+    if (this.tutorial && playing) {
+      const near = distXZ(p.pos, m.map.objective) <= OBJECTIVE.interactRadius + 1.5;
+      const key = this.tutorial.step({ moved: this.tutAcc.moved, looked: this.tutAcc.looked, ads: p.weapon.ads, shots: this.tutAcc.shots, nearObjective: near, planting: m.objective.charge === 'planting' && m.objective.actor === p.id }, dt);
+      this.hud.tutorial = key ? mt(key) : null;
+      if (!key) { this.tutorial = null; this.onTutorialDone(); }
+    } else this.hud.tutorial = null;
+
+    // Footsteps: own (quiet) and enemies within earshot, one step per stride.
+    for (const c of m.combatants) {
+      if (c.health.state !== 'alive' || !c.move.grounded || c.speed < 1 || c.move.stance === 'prone') { this.stepDist.set(c.id, 0); continue; }
+      const stride = c.move.sprinting ? 2.1 : c.move.stance === 'crouch' ? 1.2 : 1.6;
+      const d = (this.stepDist.get(c.id) ?? 0) + c.speed * dt;
+      if (c.id === p.id) this.tutAcc.moved += c.speed * dt;
+      if (d >= stride) {
+        this.stepDist.set(c.id, d - stride);
+        if (c.id === p.id) this.sfx.footstep(0, 0, c.move.sprinting);
+        else if (c.team !== p.team && c.move.stance !== 'crouch') {
+          const dx = c.pos.x - p.pos.x, dz = c.pos.z - p.pos.z, dist = Math.hypot(dx, dz) || 1;
+          const pan = clamp((dx * Math.cos(p.yaw) - dz * Math.sin(p.yaw)) / dist, -1, 1) * 0.8;
+          this.sfx.footstep(dist, pan, c.move.sprinting);
+        }
+      } else this.stepDist.set(c.id, d);
+    }
+
+    // Touch aim assist: look slows down while the crosshair is over a visible enemy (never moves the aim by itself).
+    this.assist = 1;
+    if (this.touch && this.sens.assist && p.health.state === 'alive') {
+      const fx = -Math.sin(p.yaw) * Math.cos(p.pitch), fy = Math.sin(p.pitch), fz = -Math.cos(p.yaw) * Math.cos(p.pitch);
+      const ex = p.pos.x, ey = p.pos.y + eyeHeight(p), ez = p.pos.z;
+      const cone = p.weapon.ads > 0.5 ? 0.035 : 0.06; // rad
+      for (const c of m.combatants) {
+        if (c.team === p.team || c.health.state !== 'alive') continue;
+        const tx = c.pos.x - ex, ty = c.pos.y + 1.2 - ey, tz = c.pos.z - ez, dist = Math.hypot(tx, ty, tz);
+        if (dist > 70 || dist < 0.5) continue;
+        const cos = (tx * fx + ty * fy + tz * fz) / dist;
+        const ang = Math.acos(Math.min(1, cos));
+        const radius = cone + Math.atan(0.45 / dist); // body half-width
+        if (ang < radius) { this.assist = 0.55; break; }
+      }
     }
   }
 

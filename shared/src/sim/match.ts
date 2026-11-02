@@ -15,7 +15,7 @@ import { stepCombatantMovement } from './playerMove';
 import { type Projectile, type ProjectileImpact, type RayHit, spawnProjectile, stepProjectile } from './ballistics';
 import { startReload, tickWeapon, tryFire } from './weapons';
 import { createObjective, OBJECTIVE, tickObjective, type ObjectiveEvent, type ObjectiveState } from './objective';
-import { createBrain, thinkBot, type BotBrain } from './bot';
+import { createBrain, skillFor, thinkBot, type BotBrain } from './bot';
 import { hitVolumes, rayCapsule } from './hitbox';
 
 /**
@@ -48,7 +48,7 @@ export type SimEvent =
   | { type: 'damage'; attacker: number; victim: number; amount: number; zone: string; outcome: string }
   | { type: 'reload'; who: number }
   | { type: 'wave'; team: Team }
-  | { type: 'objective'; event: Exclude<ObjectiveEvent, null> }
+  | { type: 'objective'; event: Exclude<ObjectiveEvent, null>; /** Who planted/defused (when known). */ by?: number }
   | { type: 'grenade'; thrower: number; id: number; pos: Vec3 }
   | { type: 'grenadeBounce'; pos: Vec3 }
   | { type: 'explosion'; pos: Vec3; thrower: number }
@@ -65,7 +65,17 @@ export interface MatchOptions {
   /** Class of the local player (default Soldier); bots cycle through all classes. */
   playerClass?: PlayerClass;
   waveSeconds?: [number, number];
+  /** Bot skill preset (default regular). */
+  difficulty?: Difficulty;
 }
+
+/**
+ * Pace of a round (owner request 2026-11-02: less waiting, more playing). Reinforcement waves every 8/10 s
+ * instead of 20/25 s, 2.5 s of spawn protection, and spawn spots chosen away from the enemies.
+ */
+export const PACE = { waveSeconds: [8, 10] as [number, number], spawnShieldSeconds: 2.5 } as const;
+
+export type Difficulty = 'recruit' | 'regular' | 'veteran';
 
 export const BOT_CALLSIGNS = ['Falco', 'Orso', 'Vipera', 'Lince', 'Tasso', 'Corvo', 'Lupo', 'Gheppio', 'Istrice', 'Martora'];
 
@@ -93,7 +103,7 @@ export class Match {
     this.rng = new Rng(opts.seed);
     this.nav = buildNavGraph(map);
     this.cover = coverPoints(map);
-    const ws = opts.waveSeconds ?? [20, 25];
+    const ws = opts.waveSeconds ?? PACE.waveSeconds;
     this.waves = [new WaveClock(ws[0]), new WaveClock(ws[1], 7)];
     this.populate();
   }
@@ -107,7 +117,7 @@ export class Match {
       if (!bot) perTeam[team]++;
       const c = createCombatant(id++, team, bot, bot ? BOT_CALLSIGNS[botN++ % BOT_CALLSIGNS.length]! : 'Tu', cls);
       this.combatants.push(c);
-      if (bot) this.brains.set(c.id, createBrain(team === 1 ? botN : 0));
+      if (bot) this.brains.set(c.id, createBrain(team === 1 ? botN : 0, skillFor(this.opts.difficulty ?? 'regular', team === 0)));
       this.spawn(c);
     };
     if (this.opts.withPlayer) { mk(0, false); this.playerId = 0; }
@@ -120,7 +130,16 @@ export class Match {
   spawn(c: Combatant): void {
     const spots = this.map.spawns[c.team];
     const sameTeam = this.combatants.filter((o) => o.team === c.team && o.id < c.id).length;
-    const p = spots[(sameTeam + Math.floor(this.time)) % spots.length]!;
+    let p = spots[(sameTeam + Math.floor(this.time)) % spots.length]!;
+    // Mid-round respawns: the spot farthest from the nearest living enemy (never into a fight).
+    const foes = this.time > 0 ? this.combatants.filter((o) => o.team !== c.team && o.health.state === 'alive') : [];
+    if (foes.length > 0) {
+      let best = -1;
+      for (const s of spots) {
+        const near = Math.min(...foes.map((o) => distXZ(o.pos, s)));
+        if (near > best + 0.5) { best = near; p = s; }
+      }
+    }
     c.pos = v3(p.x, 0.02, p.z);
     c.yaw = this.map.spawnYaw[c.team];
     c.pitch = 0;
@@ -139,6 +158,7 @@ export class Match {
     c.weapon.reserve = spec.magazine * spec.reserveMagazines;
     c.weapon.phase = 'ready'; c.weapon.cooldown = 0; c.weapon.bloom = 0;
     c.downedFor = 0;
+    c.spawnShield = this.time > 0 ? PACE.spawnShieldSeconds : 0;
     const b = this.brains.get(c.id);
     if (b) { b.mode = 'patrol'; b.target = -1; b.lastSeen = null; b.path = []; b.pathGoal = null; b.coverSpot = null; }
     this.host.placeCharacter?.(c);
@@ -207,13 +227,14 @@ export class Match {
       Math.abs(c.pos.y - (this.map.objective.y - 1.1)) < 1.5;
     const atk = this.combatants.filter((c) => c.team === 0 && near(c));
     const def = this.combatants.filter((c) => c.team === 1 && near(c));
+    const actorBefore = this.objective.actor;
     const ev = tickObjective(this.objective, {
       attackersInteracting: atk.map((c) => c.id),
       defendersInteracting: def.map((c) => c.id),
       attackerScale: atk[0] ? classStats(atk[0].cls).plantScale : 1,
       defenderScale: def[0] ? classStats(def[0].cls).plantScale : 1,
     }, dt);
-    if (ev) this.events.push({ type: 'objective', event: ev });
+    if (ev) this.events.push({ type: 'objective', event: ev, ...(actorBefore >= 0 ? { by: actorBefore } : {}) });
     if (this.objective.phase !== 'playing') {
       this.events.push({ type: 'matchEnd', winner: this.objective.phase === 'attackersWin' ? 0 : 1 });
     }
@@ -222,6 +243,7 @@ export class Match {
   private stepCombatant(c: Combatant, dt: number): void {
     const inp = c.input;
     c.sinceShot += dt;
+    if (c.spawnShield > 0) c.spawnShield = Math.max(0, c.spawnShield - dt);
     // Recoil recovery.
     const rec = c.weapon.spec.recoilRecovery * dt;
     c.kickPitch = c.kickPitch > 0 ? Math.max(0, c.kickPitch - rec * (1 + c.kickPitch * 8)) : 0;
@@ -267,6 +289,7 @@ export class Match {
         c.kickPitch += shot.kickPitch;
         c.kickYaw += shot.kickYaw;
         c.sinceShot = 0;
+        c.spawnShield = 0; // protection ends when you open fire
         this.events.push({ type: 'shot', shooter: c.id, origin, dir, projectile: p.id });
       } else if (c.weapon.phase === 'ready' && !c.weapon.chambered && c.weapon.cooldown <= 0 && startReload(c.weapon)) {
         // Auto-reload on empty trigger pull.
@@ -356,6 +379,7 @@ export class Match {
         this.events.push({ type: 'impact', point: h.point, normal: h.normal, material: h.material, targetId: h.targetId, penetrated: imp.penetrated });
         if (h.targetId !== undefined) {
           const victim = this.combatants[h.targetId]!;
+          if (victim.spawnShield > 0) continue;
           const amount = imp.damage * owner.weapon.spec.zoneMultiplier[h.zone ?? 'torso'];
           const outcome = applyDamage(victim.health, amount, owner.id);
           if (outcome === 'downed') owner.kills++;
@@ -382,6 +406,7 @@ export class Match {
     for (const c of this.combatants) {
       if (c.health.state === 'dead') continue;
       if (c.team === g.team && c.id !== g.ownerId) continue; // no team damage
+      if (c.spawnShield > 0) continue;
       const body = v3(c.pos.x, c.pos.y + (c.health.state === 'downed' || c.move.stance === 'prone' ? 0.25 : c.move.stance === 'crouch' ? 0.85 : 1.25), c.pos.z);
       const d = Math.hypot(body.x - centre.x, body.y - centre.y, body.z - centre.z);
       let amount = blastDamage(d);

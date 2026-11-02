@@ -1,0 +1,15 @@
+{
+ "format": "seek-strike-ground-ao",
+ "version": 1,
+ "map": "banchina-est",
+ "size": 1024,
+ "bounds": {
+  "minX": -35.4,
+  "maxX": 35.9,
+  "minZ": -41.4,
+  "maxZ": 41.4
+ },
+ "samples": 24,
+ "maxDistance": 24,
+ "collidersSha256": "bf8d7400ad98f620dcf45938f26791aa98736f0c3d770820ec6c7922b8b29a72"
+}
