@@ -27,3 +27,13 @@ describe('classifyChainError', () => {
     if (r.kind === 'other') expect(r.detail.length).toBeLessThanOrEqual(200);
   });
 });
+
+describe('fee payer without SOL', () => {
+  it('maps a transaction-level AccountNotFound (wallet never credited) to insufficient SOL', () => {
+    // Seen on mainnet 2026-11-02: "Riporta nel wallet" from a wallet with 0 SOL.
+    expect(classifyChainError('AccountNotFound')).toEqual({ kind: 'insufficient-sol' });
+  });
+  it('does not treat other errors that merely mention accounts as missing SOL', () => {
+    expect(classifyChainError({ InstructionError: [3, 'MissingAccount'] }).kind).toBe('other');
+  });
+});

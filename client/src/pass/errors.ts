@@ -21,6 +21,8 @@ export function classifyChainError(err: unknown, logs: string[] | null = null, t
   const s = JSON.stringify(err ?? null);
   if (/BlockhashNotFound/.test(s)) return { kind: 'blockhash' };
   if (/InsufficientFundsForRent|InsufficientFundsForFee|"InsufficientFunds"/.test(s)) return { kind: 'insufficient-sol' };
+  // Transaction-level AccountNotFound: the fee payer has never been credited (wallet with 0 SOL).
+  if (s === '"AccountNotFound"') return { kind: 'insufficient-sol' };
   let program: string | null = null;
   let code: number | null = null;
   for (const l of logs ?? []) {
