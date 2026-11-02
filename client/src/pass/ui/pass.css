@@ -1,4 +1,4 @@
-.pass { text-align: left; border: 1px solid #f0b44a55; background: #f0b44a0d; border-radius: 8px; padding: 10px 12px; margin: 8px 0; font-size: 13px; }
+.pass { text-align: start; border: 1px solid #f0b44a55; background: #f0b44a0d; border-radius: 8px; padding: 10px 12px; margin: 8px 0; font-size: 13px; }
 .pass-title { font-weight: 700; letter-spacing: .08em; color: var(--acc); text-transform: uppercase; font-size: 12px; margin-bottom: 4px; }
 .pass p { margin: 6px 0; }
 .pass .pass-offer { color: var(--fg); font-size: 14px; font-weight: 600; }

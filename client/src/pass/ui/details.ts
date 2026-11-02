@@ -1,5 +1,6 @@
 import { DAMM_POOL, FRIDGE_PROGRAM, PASS_MINT } from '../constants';
 import { locale } from '../../ui/i18n';
+import { PACKS } from '../../i18n/packs';
 
 /**
  * Details panel copy (check-player-copy --scope details): the only place that names the program,
@@ -15,6 +16,7 @@ const IT = {
   passMint: 'Pool dello scambio',
 };
 type Key = keyof typeof IT;
+export type DetailsKey = Key;
 const EN: Record<Key, string> = {
   program: 'Program',
   mint: 'PASTA mint (the pass token)',
@@ -25,5 +27,5 @@ const EN: Record<Key, string> = {
   passMint: 'Swap pool',
 };
 export const DETAILS_COPY = { it: IT, en: EN };
-export const dt = (k: Key): string => (locale() === 'it' ? IT : EN)[k];
+export const dt = (k: Key): string => { const l = locale(); return l === 'it' ? IT[k] : l === 'en' ? EN[k] : (PACKS[l]?.details[k] ?? EN[k]); };
 export const DETAILS_ADDRESSES = { program: FRIDGE_PROGRAM, mint: PASS_MINT, pasta: DAMM_POOL };

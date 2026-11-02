@@ -1,10 +1,11 @@
 import { formatUnits } from '../bytes';
 import { PASS_DECIMALS } from '../constants';
 import { locale } from '../../ui/i18n';
+import { INTL_TAG } from '../../i18n/lang';
 import { pt } from './copy';
 
-const loc = (): string => (locale() === 'it' ? 'it-IT' : 'en-GB');
-const dec = (): string => (locale() === 'it' ? ',' : '.');
+const loc = (): string => INTL_TAG[locale()];
+const dec = (): string => new Intl.NumberFormat(loc()).formatToParts(1.5).find((p) => p.type === 'decimal')?.value ?? '.';
 
 function group(whole: string): string {
   return new Intl.NumberFormat(loc()).format(BigInt(whole));

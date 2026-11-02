@@ -108,7 +108,10 @@ export class TouchControls {
   }
 
   /** Context visibility + stance highlight. */
-  sync(state: { nearObjective: boolean; downed: boolean; alive: boolean }): void {
+  sync(state: { nearObjective: boolean; downed: boolean; alive: boolean; ended?: boolean }): void {
+    // Round over: the summary owns the screen, no combat controls on top of it (owner report 2026-11-02).
+    this.root.style.display = state.ended ? 'none' : '';
+    if (state.ended) return;
     this.buttons.interact!.style.display = state.nearObjective && state.alive ? '' : 'none';
     this.buttons.tapout!.style.display = state.downed ? '' : 'none';
     this.buttons.crouch!.classList.toggle('active', this.input.stance === 'crouch');

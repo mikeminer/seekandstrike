@@ -1,5 +1,6 @@
 /** UI strings of the meta layer (profile, challenges, settings, summary, tutorial). Italian default, English fallback. */
 import { locale } from '../ui/i18n';
+import { PACKS } from '../i18n/packs';
 
 const IT = {
   'tab.play': 'Gioca', 'tab.profile': 'Profilo', 'tab.settings': 'Impostazioni',
@@ -25,7 +26,12 @@ const IT = {
   'tut.move': 'Muoviti: trascina lo stick a sinistra (WASD su PC)', 'tut.look': 'Guardati intorno: trascina il dito a destra (mouse su PC)',
   'tut.aim': 'Premi MIRA per guardare nel red dot (tasto destro su PC)', 'tut.fire': 'Spara: premi FUOCO (clic sinistro su PC)',
   'tut.obj': 'Obiettivo: raggiungi il rombo giallo e tieni AZIONE per piazzare la carica', 'tut.done': 'Pronto! Vinci piazzando la carica o resistendo fino alla fine.',
-  'tut.skip': 'Salta',
+  'tut.skip': 'Salta', 'set.lang': 'Lingua',
+  'rank.0': 'Recluta', 'rank.1': 'Soldato', 'rank.2': 'Caporale', 'rank.3': 'Caporalmaggiore', 'rank.4': 'Sergente', 'rank.5': 'Sergente maggiore',
+  'rank.6': 'Maresciallo', 'rank.7': 'Sottotenente', 'rank.8': 'Tenente', 'rank.9': 'Capitano', 'rank.10': 'Maggiore',
+  'unlock.finish.std': 'Standard', 'unlock.dot.red': 'Punto rosso', 'unlock.finish.sand': 'Sabbia', 'unlock.dot.green': 'Punto verde',
+  'unlock.finish.olive': 'Oliva', 'unlock.finish.slate': 'Ardesia', 'unlock.dot.amber': 'Punto ambra', 'unlock.finish.night': 'Notte',
+  'unlock.dot.cyan': 'Punto ciano', 'unlock.finish.bronze': 'Bronzo', 'unlock.finish.gold': 'Oro opaco',
 } as const;
 type K = keyof typeof IT;
 const EN: Record<K, string> = {
@@ -52,11 +58,18 @@ const EN: Record<K, string> = {
   'tut.move': 'Move: drag the left stick (WASD on PC)', 'tut.look': 'Look around: drag on the right (mouse on PC)',
   'tut.aim': 'Press AIM to look through the red dot (right click on PC)', 'tut.fire': 'Fire: press FIRE (left click on PC)',
   'tut.obj': 'Objective: reach the yellow diamond and hold ACTION to plant the charge', 'tut.done': 'Ready! Win by planting the charge or holding out to the end.',
-  'tut.skip': 'Skip',
+  'tut.skip': 'Skip', 'set.lang': 'Language',
+  'rank.0': 'Recruit', 'rank.1': 'Private', 'rank.2': 'Corporal', 'rank.3': 'Lance Corporal', 'rank.4': 'Sergeant', 'rank.5': 'Staff Sergeant',
+  'rank.6': 'Warrant Officer', 'rank.7': 'Second Lieutenant', 'rank.8': 'Lieutenant', 'rank.9': 'Captain', 'rank.10': 'Major',
+  'unlock.finish.std': 'Standard', 'unlock.dot.red': 'Red dot', 'unlock.finish.sand': 'Sand', 'unlock.dot.green': 'Green dot',
+  'unlock.finish.olive': 'Olive', 'unlock.finish.slate': 'Slate', 'unlock.dot.amber': 'Amber dot', 'unlock.finish.night': 'Night',
+  'unlock.dot.cyan': 'Cyan dot', 'unlock.finish.bronze': 'Bronze', 'unlock.finish.gold': 'Matte gold',
 };
+export const META_COPY = { it: IT, en: EN };
 
 export function m(key: K, vars?: Record<string, string | number>): string {
-  let s: string = locale() === 'it' ? IT[key] : EN[key];
+  const l = locale();
+  let s: string = l === 'it' ? IT[key] : l === 'en' ? EN[key] : (PACKS[l]?.meta[key] ?? EN[key]);
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   return s;
 }

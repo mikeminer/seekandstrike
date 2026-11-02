@@ -113,7 +113,7 @@
 .menu { overflow-y: auto; align-items: flex-start; padding: calc(16px + var(--st)) 0 calc(16px + var(--sb)); }
 .menu .card { margin: auto; }
 .meta-head { margin: 6px 0 4px; }
-.mh-row { display: flex; align-items: center; gap: 10px; text-align: left; }
+.mh-row { display: flex; align-items: center; gap: 10px; text-align: start; }
 .mh-lvl { font-size: 22px; color: #111; background: var(--acc); border-radius: 6px; min-width: 38px; text-align: center; padding: 2px 6px; }
 .mh-mid { flex: 1; }
 .mh-rank { font-size: 12px; font-weight: 700; letter-spacing: .06em; margin-bottom: 3px; }
@@ -122,8 +122,8 @@
 .meta-tabs button { flex: 1; margin: 0; padding: 8px 6px; background: #ffffff10; color: var(--fg); font-size: 13px; }
 .meta-tabs button.on { background: var(--acc); color: #111; }
 .meta-pane[hidden] { display: none; }
-.meta-pane h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); margin: 12px 0 6px; text-align: left; }
-.ch { text-align: left; margin: 6px 0; font-size: 13px; }
+.meta-pane h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); margin: 12px 0 6px; text-align: start; }
+.ch { text-align: start; margin: 6px 0; font-size: 13px; }
 .ch-t { display: flex; justify-content: space-between; gap: 8px; }
 .ch-t span { color: var(--dim); font-size: 11px; white-space: nowrap; }
 .ch-b { height: 5px; background: #0008; border-radius: 3px; overflow: hidden; margin-top: 3px; }
@@ -133,7 +133,7 @@
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
 .stats div { background: #ffffff0a; border-radius: 6px; padding: 6px; font-size: 11px; color: var(--dim); }
 .stats b { display: block; font-size: 16px; color: var(--fg); }
-.meta-pane .row { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 13px; text-align: left; }
+.meta-pane .row { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 13px; text-align: start; }
 .meta-pane .row input[type=range] { flex: 1; accent-color: var(--acc); }
 .meta-pane .row output { min-width: 42px; text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; }
 .meta-pane .row.col { flex-direction: column; align-items: stretch; }

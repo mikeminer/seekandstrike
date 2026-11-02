@@ -1,4 +1,5 @@
 import { locale } from '../../ui/i18n';
+import { PACKS } from '../../i18n/packs';
 
 /**
  * Daily Pass player copy (it/en). Scanned with check-player-copy --scope pass: outside Details the
@@ -220,7 +221,8 @@ export type PassKey = Key;
 export const PASS_COPY = { it: IT, en: EN };
 
 export function pt(key: Key, vars?: Record<string, string | number>): string {
-  let s: string = (locale() === 'it' ? IT : EN)[key];
+  const l = locale();
+  let s: string = l === 'it' ? IT[key] : l === 'en' ? EN[key] : (PACKS[l]?.pass[key] ?? EN[key]);
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
   return s;
 }

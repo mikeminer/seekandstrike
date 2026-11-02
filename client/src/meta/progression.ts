@@ -58,6 +58,8 @@ export function matchXp(r: MatchReport): XpLine[] {
 }
 
 /** Rank titles by level band. */
+/** Index of the rank title (0..10) for a level; the title text is the meta string `rank.<i>`. */
+export const rankIndex = (level: number): number => (level >= MAX_LEVEL ? 10 : Math.min(9, Math.floor((level - 1) / 5)));
 export const RANKS_IT = ['Recluta', 'Soldato', 'Caporale', 'Caporalmaggiore', 'Sergente', 'Sergente maggiore', 'Maresciallo', 'Sottotenente', 'Tenente', 'Capitano', 'Maggiore'] as const;
 export const RANKS_EN = ['Recruit', 'Private', 'Corporal', 'Lance Corporal', 'Sergeant', 'Staff Sergeant', 'Warrant Officer', 'Second Lieutenant', 'Lieutenant', 'Captain', 'Major'] as const;
 export const rankFor = (level: number, lang: 'it' | 'en' = 'it'): string => (lang === 'it' ? RANKS_IT : RANKS_EN)[level >= MAX_LEVEL ? RANKS_IT.length - 1 : Math.min(RANKS_IT.length - 2, Math.floor((level - 1) / 5))]!;

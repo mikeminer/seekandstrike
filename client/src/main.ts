@@ -3,7 +3,8 @@ import { GAME_LOGO_PATH, GAME_TAGLINE, GAME_TITLE, ONLINE } from '@shared/config
 import { createRenderer } from './render/renderer';
 import { Game } from './game/game';
 import { DEFAULT_MAP, MAPS, isMapId, type MapId } from './game/mapLoader';
-import { t } from './ui/i18n';
+import { locale, t } from './ui/i18n';
+import { isRtl } from './i18n/lang';
 import { installAutomation } from './dev/automation';
 
 import { createPass } from './pass/ui/setup';
@@ -28,6 +29,7 @@ import { quickMatchRooms } from './online/quickMatch';
 const app = document.getElementById('app');
 if (!app) throw new Error('Missing #app');
 document.title = GAME_TITLE;
+document.documentElement.lang = locale();
 const esc = (x: string): string => x.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const params = new URLSearchParams(location.search);
 const isTouch = params.has('touch') || matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
@@ -65,6 +67,7 @@ const mapInfo = MAPS[chosenMap];
 
 const menu = document.createElement('div');
 menu.className = 'menu';
+if (isRtl(locale())) menu.dir = 'rtl'; // Arabic: menu text right-to-left; the in-game HUD keeps its layout
 menu.innerHTML = `<div class="card">
   <div class="logo" aria-label="${esc(GAME_TITLE)}">${GAME_LOGO_PATH
     ? `<img src="${import.meta.env.BASE_URL}${GAME_LOGO_PATH}" alt="${esc(GAME_TITLE)}">`

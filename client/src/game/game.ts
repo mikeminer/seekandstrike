@@ -640,6 +640,7 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
       nearObjective: distXZ(p.pos, m.map.objective) <= OBJECTIVE.interactRadius + 0.6 || (classStats(p.cls).canRevive && m.combatants.some((o) => o.team === p.team && o.health.state === 'downed' && distXZ(o.pos, p.pos) <= REVIVE_RADIUS + 0.6)),
       downed: p.health.state === 'downed',
       alive: p.health.state === 'alive',
+      ended: m.phase !== 'playing',
     });
   }
 

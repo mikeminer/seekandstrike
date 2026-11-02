@@ -3,9 +3,10 @@
  * challenges with progress, lifetime stats, unlocks and settings. Pure DOM, no game imports.
  */
 import { locale } from '../ui/i18n';
+import { LANGS, NATIVE_NAMES, chooseLang, isLang } from '../i18n/lang';
 import { challengeText, m } from './strings';
 import {
-  type Profile, type Settings, UNLOCKS, challengeDef, levelFromXp, rankFor, refreshPeriods, unlockedAt,
+  type Profile, type Settings, UNLOCKS, challengeDef, levelFromXp, rankIndex, refreshPeriods, unlockedAt,
 } from './progression';
 import { saveProfile } from './profileStore';
 
@@ -52,7 +53,7 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
   const renderHeader = (): void => {
     const l = levelFromXp(profile.xp);
     const pct = l.need ? Math.round((l.into / l.need) * 100) : 100;
-    header.innerHTML = `<div class="mh-row"><b class="mh-lvl">${l.level}</b><div class="mh-mid"><div class="mh-rank">${esc(rankFor(l.level, lang))}</div>
+    header.innerHTML = `<div class="mh-row"><b class="mh-lvl">${l.level}</b><div class="mh-mid"><div class="mh-rank">${esc(m(`rank.${rankIndex(l.level)}` as never))}</div>
       <div class="mh-bar"><i style="width:${pct}%"></i></div></div><div class="mh-xp">${l.need ? `${l.into}/${l.need} ${m('xp')}` : 'MAX'}</div></div>`;
   };
 
@@ -69,7 +70,7 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
         <div><b>${s.matches}</b>${m('st.matches')}</div><div><b>${s.wins}</b>${m('st.wins')}</div><div><b>${kd}</b>${m('st.kd')}</div>
         <div><b>${acc}</b>${m('st.acc')}</div><div><b>${s.headshots}</b>${m('st.head')}</div><div><b>${s.bestStreak}</b>${m('st.streak')}</div>
         <div><b>${mins} min</b>${m('st.time')}</div></div>
-      <h3>${m('un.title')}</h3><p>${next ? esc(m('un.next', { n: next.level, name: lang === 'it' ? next.nameIt : next.nameEn })) : m('un.all')}</p>`;
+      <h3>${m('un.title')}</h3><p>${next ? esc(m('un.next', { n: next.level, name: m(`unlock.${next.id}` as never) })) : m('un.all')}</p>`;
   };
 
   const renderSettings = (): void => {
@@ -77,7 +78,7 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
     const opts = (kind: 'finish' | 'dot', cur: string): string => UNLOCKS.filter((u) => u.kind === kind).map((u) => {
       const ok = u.level <= lvl;
       const sw = kind === 'finish' ? hex(u.tint!) : hex(u.dot!);
-      return `<button type="button" class="sw${u.id === cur ? ' on' : ''}" data-${kind}="${u.id}" ${ok ? '' : 'disabled'} title="${esc(lang === 'it' ? u.nameIt : u.nameEn)}"><i style="background:${sw}"></i>${esc(lang === 'it' ? u.nameIt : u.nameEn)}${ok ? '' : ` · ${m('set.locked', { n: u.level })}`}</button>`;
+      return `<button type="button" class="sw${u.id === cur ? ' on' : ''}" data-${kind}="${u.id}" ${ok ? '' : 'disabled'} title="${esc(m(`unlock.${u.id}` as never))}"><i style="background:${sw}"></i>${esc(m(`unlock.${u.id}` as never))}${ok ? '' : ` · ${m('set.locked', { n: u.level })}`}</button>`;
     }).join('');
     sett.innerHTML = `
       <label class="row">${m('set.look')} <input type="range" min="0.5" max="2" step="0.05" value="${st.lookSens}" data-set="lookSens"><output>${st.lookSens.toFixed(2)}</output></label>
@@ -87,10 +88,15 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
       <label class="row">${m('set.diff')} <select data-set="difficulty">${(['recruit', 'regular', 'veteran'] as const).map((d) => `<option value="${d}"${d === st.difficulty ? ' selected' : ''}>${m(`set.diff.${d}`)}</option>`).join('')}</select></label>
       <div class="row col">${m('set.finish')}<div class="sws">${opts('finish', st.finish)}</div></div>
       <div class="row col">${m('set.dot')}<div class="sws">${opts('dot', st.dot)}</div></div>
+      <label class="row">${m('set.lang')} <select data-lang>${LANGS.map((l) => `<option value="${l}"${l === lang ? ' selected' : ''}>${NATIVE_NAMES[l]}</option>`).join('')}</select></label>
       <button type="button" class="ghost" data-tut>${m('set.tutorial')}</button>`;
   };
 
   const commit = (): void => { saveProfile(profile); hooks.onSettings(profile.settings); };
+  sett.addEventListener('change', (e) => {
+    const el = e.target as HTMLSelectElement;
+    if (el.dataset.lang !== undefined && isLang(el.value) && el.value !== lang) chooseLang(el.value);
+  });
   sett.addEventListener('input', (e) => {
     const el = e.target as HTMLInputElement;
     const k = el.dataset.set as keyof Settings | undefined;

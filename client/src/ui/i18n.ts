@@ -1,4 +1,9 @@
-/** Minimal i18n (it default, en fallback). Locales are listed in shared PENDING_DEFAULTS. */
+/**
+ * UI strings. Italian and English are the source tables; the other 15 dApp Store languages live in
+ * client/src/i18n/packs (missing keys fall back to English).
+ */
+import { type Lang, detectLang } from '../i18n/lang';
+import { PACKS } from '../i18n/packs';
 const IT = {
   'menu.subtitle': 'Offline contro bot',
   'menu.play': 'Gioca (offline vs bot)',
@@ -33,6 +38,7 @@ const IT = {
 } as const;
 
 type Key = keyof typeof IT;
+export type UiKey = Key;
 const EN: Record<Key, string> = {
   'menu.subtitle': 'Offline vs bots',
   'menu.play': 'Play (offline vs bots)',
@@ -65,13 +71,12 @@ const EN: Record<Key, string> = {
   'blockout': 'BLOCKOUT: provisional map (box geometry)',
 };
 
-let lang: 'it' | 'en' = (typeof navigator !== 'undefined' && navigator.language?.startsWith('it')) || typeof navigator === 'undefined' ? 'it' : 'en';
-const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('lang') : null;
-if (q === 'it' || q === 'en') lang = q;
+const lang: Lang = typeof navigator === 'undefined' ? 'it' : detectLang();
 
-export const locale = (): 'it' | 'en' => lang;
+export const locale = (): Lang => lang;
+export const UI_COPY = { it: IT, en: EN };
 export function t(key: Key, vars?: Record<string, string | number>): string {
-  let s: string = lang === 'it' ? IT[key] : EN[key];
+  let s: string = lang === 'it' ? IT[key] : lang === 'en' ? EN[key] : (PACKS[lang]?.ui[key] ?? EN[key]);
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   return s;
 }
