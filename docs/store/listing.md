@@ -57,6 +57,11 @@ SEEK & STRIKE is a first-person shooter built for the Seeker.
 
 **Keywords:** fps, shooter, tactical, multiplayer, seeker, solana, bots, offline
 
+## Links for the dApp Store form
+- Website: https://seekandstrike.it
+- Privacy policy: https://seekandstrike.it/privacy
+- Terms / license: https://seekandstrike.it/terms
+
 ## Credits shown in the listing
 - Map data © OpenStreetMap contributors (ODbL) — Trieste — Porto Vecchio.
 - Third-party assets: see `ASSETS_LICENSES.md`.
