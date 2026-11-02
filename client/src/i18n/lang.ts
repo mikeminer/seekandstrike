@@ -39,7 +39,8 @@ export function detectLang(): Lang {
   }
   try { const s = localStorage.getItem(KEY); if (isLang(s)) return s; } catch { /* storage unavailable */ }
   if (typeof navigator !== 'undefined') {
-    for (const tag of navigator.languages ?? [navigator.language]) { const l = tag ? matchLang(tag) : null; if (l) return l; }
+    // The device language first: on the Seeker WebView navigator.languages can start with en-US even when the phone is in Italian.
+    for (const tag of [navigator.language, ...(navigator.languages ?? [])]) { const l = tag ? matchLang(tag) : null; if (l) return l; }
   }
   return 'en';
 }
