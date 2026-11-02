@@ -7,5 +7,9 @@ dist/
 *.jks
 *.keystore
 keystore.properties
-android-host/android/
+# android-host/android/ is tracked (hand-written TxValidator, PassValidatorPlugin, MainActivity, icons);
+# its own .gitignore excludes build output, local.properties, the synced web bundle and generated plugins.
+*.p12
+*.jks
+signing-password.clixml
 dist-dev/
