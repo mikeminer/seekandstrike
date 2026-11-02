@@ -73,6 +73,12 @@ export class Game {
   private endWhy = '';
   private beepT = 0;
   private camShake = 0;
+  /** Debug: largest per-frame camera height change (mm) over the last ~0.5 s. */
+  private camDiag = 0;
+  private aimTrace: string[] = [];
+  private lastSteps = 0;
+  private camDiagAge = 0;
+  private camPrevY = 0;
   /** Set while playing on a server: the match is then a mirror of server snapshots, not simulated here. */
   private online: OnlineSession | null = null;
   private grenadeMeshes = new Map<number, THREE.Mesh>();
@@ -317,6 +323,7 @@ export class Game {
     } else {
       const stepped = this.stepper.advance(frameMs / 1000);
       alpha = stepped.alpha;
+      this.lastSteps = stepped.steps;
       for (let i = 0; i < stepped.steps; i++) {
         for (const c of m.combatants) this.prevPos.set(c.id, { ...c.pos });
         const snap = this.input.sample();
@@ -329,6 +336,12 @@ export class Game {
     }
     const dt = Math.min(0.1, frameMs / 1000);
     this.updateView(alpha, dt);
+    if (__DEV_PASS_BYPASS__ && this.opts.debug) {
+      // DEV aim trace → logcat (Capacitor/Console): one row per frame, flushed every 60 frames.
+      const w = p.weapon, rp = this.viewmodel.rigPose();
+      this.aimTrace.push(`${Math.round(t)},${this.online ? -1 : this.lastSteps},${w.ads.toFixed(3)},${p.input.aim ? 1 : 0},${p.move.sprinting ? 1 : 0},${w.phase},${(rp.x * 1000).toFixed(1)},${(rp.y * 1000).toFixed(1)},${(rp.rx * 1000).toFixed(1)},${(rp.ry * 1000).toFixed(1)}`);
+      if (this.aimTrace.length >= 60) { console.info('AIMTRACE ' + this.aimTrace.join(';')); this.aimTrace = []; }
+    }
 
     this.renderer.autoClear = true;
     this.envFrame?.(t / 1000);
@@ -342,7 +355,7 @@ export class Game {
     if (obs.sample) this.fps = obs.sample.fps;
     if (obs.event) this.applyTier(obs.state.tier);
     this.hud.debug = this.opts.debug
-      ? `fps(3s) ${this.fps.toFixed(1)} tier ${this.tier} dpr ${this.renderer.getPixelRatio()}\ncalls ${this.renderer.info.render.calls} tris ${this.renderer.info.render.triangles}\nrapier ${this.physics.version} proj ${m.projectiles.length}${this.online ? `
+      ? `fps(3s) ${this.fps.toFixed(1)} tier ${this.tier} dpr ${this.renderer.getPixelRatio()}\ncalls ${this.renderer.info.render.calls} tris ${this.renderer.info.render.triangles}\naim ads ${this.viewmodel.diag.ads.toFixed(2)} spd ${p.speed.toFixed(2)} gun ${this.viewmodel.diag.posMm.toFixed(1)}mm ${this.viewmodel.diag.rotMrad.toFixed(1)}mrad cam ${this.camDiag.toFixed(1)}mm\nrapier ${this.physics.version} proj ${m.projectiles.length}${this.online ? `
 online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.corrections} err ${(this.online.predictor.stats.lastError * 100).toFixed(1)} cm` : ''}`
       : null;
   }
@@ -460,6 +473,10 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     const sh = this.camShake * 0.02;
     this.camera.position.set(pp.x + (Math.random() - 0.5) * sh, pp.y + this.eyeY + (Math.random() - 0.5) * sh, pp.z);
     this.camera.rotation.set(p.pitch + p.kickPitch, p.yaw + p.kickYaw, p.health.state === 'downed' ? 0.25 : 0, 'YXZ');
+    this.camDiagAge += dt;
+    if (this.camDiagAge > 0.5) { this.camDiagAge = 0; this.camDiag = 0; }
+    this.camDiag = Math.max(this.camDiag, Math.abs(this.camera.position.y - this.camPrevY) * 1000);
+    this.camPrevY = this.camera.position.y;
     this.camera.fov = WORLD_FOV.hip - p.weapon.ads * (WORLD_FOV.hip - WORLD_FOV.ads);
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();

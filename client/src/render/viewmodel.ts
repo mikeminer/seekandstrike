@@ -24,6 +24,8 @@ const HIP_PITCH = -0.1;
 const OPTIC_R = new THREE.Vector3(0.15, 0.295, 0);
 const OPTIC_GUN = new THREE.Vector3(0, 0.07, -0.04);
 const MAG_PIVOT_R = new THREE.Vector3(0.02, 0.0, 0);
+/** R-space triangle centroids ahead of the optic and above the rail: they block the view through the red dot. */
+export const SIGHT_LINE_BLOCKER = (c: { x: number; y: number; z: number }): boolean => c.x < -0.05 && c.y > 0.245 && Math.abs(c.z) < 0.08;
 
 const v3 = (x: number, y: number, z: number): THREE.Vector3 => new THREE.Vector3(x, y, z);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
@@ -88,6 +90,11 @@ export class Viewmodel {
   private swayY = 0;
   private wasEmpty = false;
   private leftHome = new THREE.Vector3();
+  /** Diagnostics (debug overlay): largest per-frame rig motion over the last ~0.5 s. */
+  readonly diag = { posMm: 0, rotMrad: 0, ads: 0 };
+  private prevPos = new THREE.Vector3();
+  private prevRot = new THREE.Euler();
+  private diagAge = 0;
 
   constructor(aspect: number, env: THREE.Texture, models: CharacterModels, flashTex: THREE.Texture) {
     this.camera = new THREE.PerspectiveCamera(HIP_FOV, aspect, 0.03, 5);
@@ -109,11 +116,15 @@ export class Viewmodel {
     this.gun.add(this.rifleR);
 
     const src = findMesh(models.rifle, 'Rifle');
-    const [optic, mag, body] = splitByCentroid(src, [
+    const [optic, mag, irons, body] = splitByCentroid(src, [
       (c) => c.x > 0.02 && c.x < 0.29 && c.y > 0.205 && Math.abs(c.z) < 0.12,
       (c) => c.x > -0.11 && c.x < 0.14 && c.y < -0.005,
+      // Iron sights ahead of the optic (front post at x≈-0.6, sight block at x≈-0.3) stood in the red-dot sight line
+      // (y 0.25-0.34, seen on the Seeker as a grey drum filling the sight). Removed: "folded" backup irons.
+      SIGHT_LINE_BLOCKER,
     ]);
     optic!.dispose();
+    irons!.dispose();
     const part = (g: THREE.BufferGeometry, parent: THREE.Object3D, pre?: THREE.Matrix4): THREE.Mesh => {
       const m = new THREE.Mesh(t(g), src.material);
       m.matrixAutoUpdate = false;
@@ -190,6 +201,9 @@ export class Viewmodel {
     this.flash.scale.setScalar(0.12 / S);
   }
 
+  /** Diagnostics: current rig pose (camera space). */
+  rigPose(): { x: number; y: number; rx: number; ry: number } { return { x: this.rig.position.x, y: this.rig.position.y, rx: this.rig.rotation.x, ry: this.rig.rotation.y }; }
+
   setAspect(a: number): void { this.camera.aspect = a; this.camera.updateProjectionMatrix(); }
 
   update(c: Combatant, dt: number, lookDX: number, lookDY: number): void {
@@ -261,6 +275,14 @@ export class Viewmodel {
       tilt * 0.5 + sprint * 0.3,
     );
     this.rig.rotation.x += HIP_PITCH * (1 - ads);
+    const dPos = this.rig.position.distanceTo(this.prevPos) * 1000;
+    const dRot = Math.max(Math.abs(this.rig.rotation.x - this.prevRot.x), Math.abs(this.rig.rotation.y - this.prevRot.y), Math.abs(this.rig.rotation.z - this.prevRot.z)) * 1000;
+    this.diagAge += dt;
+    if (this.diagAge > 0.5) { this.diagAge = 0; this.diag.posMm = 0; this.diag.rotMrad = 0; }
+    this.diag.posMm = Math.max(this.diag.posMm, dPos);
+    this.diag.rotMrad = Math.max(this.diag.rotMrad, dRot);
+    this.diag.ads = ads;
+    this.prevPos.copy(this.rig.position); this.prevRot.copy(this.rig.rotation);
     this.camera.fov = THREE.MathUtils.lerp(HIP_FOV, ADS_FOV, ads);
     this.camera.updateProjectionMatrix();
     const flashing = c.sinceShot < 0.04;

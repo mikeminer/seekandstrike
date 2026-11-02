@@ -119,7 +119,7 @@ void passApp.then((p) => { menu.querySelector('[data-pass]')!.replaceWith(p.pane
 const renderer = createRenderer(app);
 const game = new Game(renderer, app, {
   seed: Number(params.get('seed') ?? 0) || (Date.now() >>> 0),
-  attackers: 5, defenders: 6, touch: isTouch, debug: params.has('debug'), playerClass: chosenClass, mapId: chosenMap,
+  attackers: 5, defenders: 6, touch: isTouch, debug: params.has('debug') || __DEV_PASS_BYPASS__, playerClass: chosenClass, mapId: chosenMap,
 });
 const resize = (): void => game.resize(app.clientWidth, app.clientHeight);
 window.addEventListener('resize', resize);

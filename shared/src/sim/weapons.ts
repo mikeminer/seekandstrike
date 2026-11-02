@@ -129,7 +129,10 @@ export function tickWeapon(w: WeaponState, dt: number, aim: boolean): void {
   if (w.cooldown > 0) w.cooldown = Math.max(0, w.cooldown - dt);
   const adsTarget = aim && w.phase === 'ready' ? 1 : 0;
   const rate = dt / w.spec.adsSeconds;
-  w.ads = adsTarget > w.ads ? Math.min(1, w.ads + rate) : Math.max(0, w.ads - rate);
+  // Move towards the target and HOLD it once reached. (The old `target > ads ? up : down` lowered a fully aimed
+  // weapon every other tick: ads flickered 1 ↔ 0.924 and the sight jumped between two poses.)
+  if (adsTarget > w.ads) w.ads = Math.min(adsTarget, w.ads + rate);
+  else if (adsTarget < w.ads) w.ads = Math.max(adsTarget, w.ads - rate);
   w.bloom = Math.max(0, w.bloom - w.spec.spreadRecovery * dt);
   if (w.phase === 'reloading') {
     w.reloadTimer -= dt;
