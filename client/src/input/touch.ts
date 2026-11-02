@@ -18,6 +18,9 @@ export class TouchControls {
   private off: (() => void)[] = [];
   readonly buttons: Record<string, HTMLButtonElement> = {};
   getAdsScale: () => number = () => 1;
+  /** Weapon switch (classes with a secondary weapon). */
+  onWeapon: () => void = () => {};
+  setWeaponVisible(v: boolean): void { if (this.buttons.weapon) this.buttons.weapon.style.display = v ? '' : 'none'; }
   /** Push-to-talk (online team voice). */
   onTalk: (down: boolean) => void = () => {};
   setTalkVisible(v: boolean): void { if (this.buttons.talk) this.buttons.talk.style.display = v ? '' : 'none'; }
@@ -105,6 +108,8 @@ export class TouchControls {
     btn('reload', t('btn.reload'), 'b-reload', () => this.input.press('reload'));
     btn('grenade', t('btn.grenade'), 'b-grenade', () => this.input.press('grenade'));
     btn('talk', t('btn.talk'), 'b-talk', () => this.onTalk(true), () => this.onTalk(false));
+    btn('weapon', t('btn.weapon'), 'b-weapon', () => this.onWeapon());
+    this.buttons.weapon!.style.display = 'none';
     this.buttons.talk!.style.display = 'none';
     btn('jump', t('btn.jump'), 'b-jump', () => this.input.press('jump'));
     btn('crouch', t('btn.crouch'), 'b-crouch', () => { this.input.stance = this.input.stance === 'crouch' ? 'stand' : 'crouch'; });

@@ -79,6 +79,9 @@ export interface BotBrain {
   strafeSign: number;
   strafeTimer: number;
   grenadeTimer: number;
+  /** Seconds before a Soldier bot may take the launcher out again. */
+  rocketTimer: number;
+  launcherShots: number;
 }
 
 export function createBrain(patrolLoop: number, skill: BotSkill = DEFAULT_SKILL): BotBrain {
@@ -86,7 +89,7 @@ export function createBrain(patrolLoop: number, skill: BotSkill = DEFAULT_SKILL)
     mode: 'patrol', skill, target: -1, lastSeen: null, lastSeenAge: 99, reaction: 0, trackTime: 0,
     aimErrX: 0, aimErrY: 0, burstLeft: 0, burstPause: 0, path: [], pathGoal: null, repathTimer: 0,
     coverSpot: null, coverTimer: 0, patrolLoop, patrolIdx: 0, waitTimer: 0, perceiveTimer: 0,
-    stuckTimer: 0, stuckRef: v3(), strafeSign: 1, strafeTimer: 0, grenadeTimer: 4,
+    stuckTimer: 0, stuckRef: v3(), strafeSign: 1, strafeTimer: 0, grenadeTimer: 4, rocketTimer: 6, launcherShots: 0,
   };
 }
 
@@ -211,6 +214,17 @@ export function thinkBot(m: Match, self: Combatant, b: BotBrain, dt: number): vo
     }
   }
 
+  // Soldiers: the launcher against a visible target 10-50 m away, now and then; the rifle otherwise.
+  if (self.weapons.length > 1) {
+    b.rocketTimer -= dt;
+    const launcher = self.weapons[1]!;
+    if (launcher.shotsFired !== b.launcherShots) { b.launcherShots = launcher.shotsFired; b.rocketTimer = m.rng.range(12, 20); }
+    const rockets = launcher.inMag + (launcher.chambered ? 1 : 0) + launcher.reserve;
+    const d = target ? distXZ(self.pos, target.pos) : 0;
+    const want = targetVisible && rockets > 0 && d > 10 && d < 50 && b.rocketTimer <= 0 ? 1 : 0;
+    inp.switchWeapon = self.slot !== want && self.weapon.phase !== 'reloading';
+  }
+
   // Medics go to a downed teammate (no enemy in sight) and hold interact beside them.
   if (classStats(self.cls).canRevive && b.mode !== 'engage' && b.mode !== 'cover') {
     const patient = nearestDowned(m, self, 40);
@@ -238,7 +252,8 @@ function nearestLowAmmo(m: Match, self: Combatant, maxDist: number): Combatant |
   let bd = maxDist;
   for (const o of m.combatants) {
     if (o.team !== self.team || o.id === self.id || o.health.state !== 'alive') continue;
-    if (o.weapon.reserve >= o.weapon.spec.magazine * RESUPPLY.lowMagazines) continue;
+    const w = o.weapons[0]!;
+    if (w.reserve >= w.spec.magazine * RESUPPLY.lowMagazines) continue;
     const d = distXZ(self.pos, o.pos);
     if (d < bd) { bd = d; best = o; }
   }

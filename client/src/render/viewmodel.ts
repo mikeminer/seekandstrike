@@ -69,6 +69,12 @@ export class Viewmodel {
   readonly camera: THREE.PerspectiveCamera;
   private rig = new THREE.Group();
   private gun = new THREE.Group();
+  private redDot = new THREE.Group();
+  private scope = new THREE.Group();
+  private launcher = new THREE.Group();
+  private kind: 'rifle' | 'sniper' | 'launcher' = 'rifle';
+  /** Lower/raise animation after a weapon switch (s left). */
+  private switchT = 0;
   private rifleR = new THREE.Group();
   private mag = new THREE.Group();
   private newMag = new THREE.Group();
@@ -151,17 +157,54 @@ export class Viewmodel {
     this.dotMat = dot;
     const tubeR = 0.019 / S, tubeL = 0.05 / S;
     const tube = new THREE.Mesh(t(new THREE.CylinderGeometry(tubeR, tubeR, tubeL, 24, 1, true).rotateZ(Math.PI / 2)), metal);
-    tube.position.copy(OPTIC_R); this.rifleR.add(tube);
+    tube.position.copy(OPTIC_R); this.redDot.add(tube);
     const hood = new THREE.Mesh(t(new THREE.CylinderGeometry(tubeR * 1.12, tubeR * 1.12, tubeL * 0.25, 24, 1, true).rotateZ(Math.PI / 2)), metal);
-    hood.position.copy(OPTIC_R).add(new THREE.Vector3(-tubeL * 0.55, 0, 0)); this.rifleR.add(hood);
+    hood.position.copy(OPTIC_R).add(new THREE.Vector3(-tubeL * 0.55, 0, 0)); this.redDot.add(hood);
     const mount = new THREE.Mesh(t(new THREE.BoxGeometry(0.1, OPTIC_R.y - 0.2 - tubeR + 0.01, 0.05)), metal);
     mount.position.set(OPTIC_R.x, (0.2 + OPTIC_R.y - tubeR) / 2, 0); this.rifleR.add(mount);
     const knob = new THREE.Mesh(t(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 12)), metal);
-    knob.position.set(OPTIC_R.x, OPTIC_R.y + tubeR + 0.012, 0); this.rifleR.add(knob);
+    knob.position.set(OPTIC_R.x, OPTIC_R.y + tubeR + 0.012, 0); this.redDot.add(knob);
     const lens = new THREE.Mesh(t(new THREE.CircleGeometry(tubeR * 0.97, 24).rotateY(Math.PI / 2)), glass);
-    lens.position.copy(OPTIC_R).add(new THREE.Vector3(-tubeL * 0.48, 0, 0)); this.rifleR.add(lens);
+    lens.position.copy(OPTIC_R).add(new THREE.Vector3(-tubeL * 0.48, 0, 0)); this.redDot.add(lens);
     const d = new THREE.Mesh(t(new THREE.CircleGeometry(0.0011 / S, 10).rotateY(Math.PI / 2)), dot);
-    d.position.copy(OPTIC_R).add(new THREE.Vector3(-tubeL * 0.46, 0, 0)); this.rifleR.add(d);
+    d.position.copy(OPTIC_R).add(new THREE.Vector3(-tubeL * 0.46, 0, 0)); this.redDot.add(d);
+    this.rifleR.add(this.redDot);
+
+    // SR-7 scope (sniper): a long tube with an objective bell, on the same mount.
+    const scopeR = 0.021 / S, scopeL = 0.2 / S;
+    const scopeTube = new THREE.Mesh(t(new THREE.CylinderGeometry(scopeR, scopeR, scopeL, 24).rotateZ(Math.PI / 2)), metal);
+    scopeTube.position.copy(OPTIC_R); this.scope.add(scopeTube);
+    const bell = new THREE.Mesh(t(new THREE.CylinderGeometry(scopeR * 1.55, scopeR, scopeL * 0.22, 24).rotateZ(Math.PI / 2)), metal);
+    bell.position.copy(OPTIC_R).add(new THREE.Vector3(-scopeL * 0.55, 0, 0)); this.scope.add(bell);
+    const eyepiece = new THREE.Mesh(t(new THREE.CylinderGeometry(scopeR * 1.2, scopeR * 1.2, scopeL * 0.12, 24).rotateZ(Math.PI / 2)), metal);
+    eyepiece.position.copy(OPTIC_R).add(new THREE.Vector3(scopeL * 0.5, 0, 0)); this.scope.add(eyepiece);
+    const scopeMount = mount.clone(); this.scope.add(scopeMount);
+    const glassLens = new THREE.Mesh(t(new THREE.CircleGeometry(scopeR * 1.45, 24).rotateY(Math.PI / 2)), glass);
+    glassLens.position.copy(OPTIC_R).add(new THREE.Vector3(-scopeL * 0.66, 0, 0)); this.scope.add(glassLens);
+    this.scope.visible = false;
+    this.rifleR.add(this.scope);
+
+    // LR-1 launcher (Soldier secondary): olive tube on the shoulder, grips and a ring sight. Gun space, metres.
+    const olive = t(new THREE.MeshStandardMaterial({ color: 0x4b5137, roughness: 0.7, metalness: 0.2 }));
+    const dark = t(new THREE.MeshStandardMaterial({ color: 0x1d1f1c, roughness: 0.5, metalness: 0.6 }));
+    const lTube = new THREE.Mesh(t(new THREE.CylinderGeometry(0.048, 0.048, 1.05, 20).rotateX(Math.PI / 2)), olive);
+    lTube.position.set(0, 0, -0.2); this.launcher.add(lTube);
+    for (const [z, r, l] of [[-0.74, 0.062, 0.12], [0.33, 0.058, 0.08]] as const) {
+      const ring = new THREE.Mesh(t(new THREE.CylinderGeometry(r, r, l, 20, 1, true).rotateX(Math.PI / 2)), dark);
+      ring.position.set(0, 0, z); this.launcher.add(ring);
+    }
+    const grip = new THREE.Mesh(t(new THREE.BoxGeometry(0.035, 0.11, 0.045)), dark);
+    grip.position.set(0, -0.09, 0.02); grip.rotation.x = 0.25; this.launcher.add(grip);
+    const fore = new THREE.Mesh(t(new THREE.BoxGeometry(0.03, 0.09, 0.04)), dark);
+    fore.position.set(0, -0.085, -0.3); this.launcher.add(fore);
+    const sightPost = new THREE.Mesh(t(new THREE.BoxGeometry(0.012, 0.06, 0.012)), dark);
+    sightPost.position.set(-0.062, 0.035, -0.05); this.launcher.add(sightPost);
+    const sightRing = new THREE.Mesh(t(new THREE.TorusGeometry(0.02, 0.003, 6, 20)), dark);
+    sightRing.position.set(-0.062, 0.075, -0.05); this.launcher.add(sightRing);
+    const warhead = new THREE.Mesh(t(new THREE.ConeGeometry(0.045, 0.16, 16).rotateX(-Math.PI / 2)), olive);
+    warhead.position.set(0, 0, -0.82); this.launcher.add(warhead);
+    this.launcher.visible = false;
+    this.rig.add(this.launcher);
 
     // Gloves + camo sleeves (gun space, metres).
     // Dark tactical gloves (a skin-tone glove read as bare hands next to the camo sleeves).
@@ -215,6 +258,9 @@ export class Viewmodel {
 
   /** Diagnostics: current rig pose (camera space). */
   rigPose(): { x: number; y: number; rx: number; ry: number } { return { x: this.rig.position.x, y: this.rig.position.y, rx: this.rig.rotation.x, ry: this.rig.rotation.y }; }
+
+  /** True while the sniper scope fills the screen. */
+  get scoped(): boolean { return this.kind === 'sniper' && !this.rig.visible; }
 
   setAspect(a: number): void { this.camera.aspect = a; this.camera.updateProjectionMatrix(); }
 
@@ -301,6 +347,24 @@ export class Viewmodel {
     this.flash.visible = flashing;
     if (flashing) { this.flash.material.rotation = Math.random() * Math.PI * 2; this.flash.scale.setScalar((0.09 + Math.random() * 0.06) / S); }
     this.rig.visible = c.health.state === 'alive';
+    // Weapon kind: rifle (red dot), sniper (scope; the model hides when looking through it), launcher (tube on the shoulder).
+    const kind = w.spec.kind;
+    if (kind !== this.kind) { this.kind = kind; this.switchT = 0.45; }
+    this.switchT = Math.max(0, this.switchT - dt);
+    const sw = Math.sin(Math.min(1, this.switchT / 0.45) * Math.PI); // 0 → 1 → 0 while switching
+    this.gun.visible = kind !== 'launcher';
+    this.launcher.visible = kind === 'launcher';
+    this.redDot.visible = kind === 'rifle';
+    this.scope.visible = kind === 'sniper';
+    if (kind === 'sniper' && ads > 0.9) this.rig.visible = false; // the HUD scope takes over
+    if (kind === 'launcher') {
+      // Shoulder pose: right of the view at the hip, centred under the eye when aimed (ring sight on the axis).
+      this.launcher.position.set(0.16 - 0.1 * ads, -0.06 + 0.05 * ads - sw * 0.25, -0.05);
+      this.launcher.rotation.set(kickPitch * 0.08 + sprint * -0.3, sprint * 0.5, 0);
+      this.gun.position.set(0, 0, 0);
+    } else {
+      this.gun.position.set(0, -sw * 0.25, 0);
+    }
   }
 
   dispose(): void { for (const o of this.owned) o.dispose(); }

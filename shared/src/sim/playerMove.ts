@@ -34,6 +34,8 @@ export interface MoveCmd {
   reload?: boolean;
   tapOut?: boolean;
   grenade?: boolean;
+  /** Switch primary ↔ secondary weapon (one press). */
+  weapon?: boolean;
 }
 
 const STANCES: readonly Stance[] = ['stand', 'crouch', 'prone'];
@@ -45,7 +47,7 @@ export function applyCmdToInput(c: Combatant, cmd: MoveCmd): void {
   inp.sprint = cmd.sprint && cmd.moveY > 0.5;
   inp.aim = cmd.aim; inp.fire = cmd.fire; inp.interact = cmd.interact;
   inp.wantStance = STANCES[cmd.stance]!;
-  inp.jump = !!cmd.jump; inp.reload = !!cmd.reload; inp.tapOut = !!cmd.tapOut; inp.throwGrenade = !!cmd.grenade;
+  inp.jump = !!cmd.jump; inp.reload = !!cmd.reload; inp.tapOut = !!cmd.tapOut; inp.throwGrenade = !!cmd.grenade; inp.switchWeapon = !!cmd.weapon;
   inp.lookYaw = clamp(wrapAngle(cmd.yaw - c.yaw), -MAX_TURN_PER_STEP, MAX_TURN_PER_STEP);
   inp.lookPitch = clamp(clamp(cmd.pitch, -1.45, 1.45) - c.pitch, -MAX_TURN_PER_STEP, MAX_TURN_PER_STEP);
 }

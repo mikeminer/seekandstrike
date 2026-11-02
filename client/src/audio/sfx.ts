@@ -95,7 +95,8 @@ export class Sfx {
   }
 
   /** distance in metres, pan -1..1 (left/right of the listener). */
-  shot(distance: number, pan: number, own: boolean): void {
+  shot(distance: number, pan: number, own: boolean, heavy = false): void {
+    if (heavy) { this.heavyShot(distance, pan, own); return; }
     const att = own ? 1 : Math.min(0.9, 9 / Math.max(9, distance));
     const delay = own ? 0 : Math.min(0.25, distance / 343);
     const far = Math.min(1, distance / 80);
@@ -105,6 +106,25 @@ export class Sfx {
     this.burst({ gain: 1.0 * att, freq: 170, q: 0.9, dur: 0.2 + far * 0.25, type: 'lowpass', delay, pan });
     this.burst({ gain: 0.22 * att, freq: 900, q: 0.4, dur: 0.55 + far * 0.6, type: 'lowpass', delay: delay + 0.04, pan, verb: 1 }); // tail
     if (own) this.tone(3400, 0.03, 0.04, 'square', 0.035); // mechanism
+  }
+
+  /** SR-7: a deeper, longer crack that carries further. */
+  private heavyShot(distance: number, pan: number, own: boolean): void {
+    const att = own ? 1 : Math.min(1, 14 / Math.max(14, distance));
+    const delay = own ? 0 : Math.min(0.35, distance / 343);
+    this.burst({ gain: 1.0 * att, freq: 6000, q: 0.5, dur: 0.03, type: 'highpass', delay, pan });
+    this.burst({ gain: 1.1 * att, freq: 1500, q: 0.6, dur: 0.12, delay, pan, verb: 1 });
+    this.tone(90, 0.3, 0.75 * att, 'sine', delay, 30, pan);
+    this.burst({ gain: 0.4 * att, freq: 700, q: 0.4, dur: 1.2, type: 'lowpass', delay: delay + 0.05, pan, verb: 1.2 });
+    if (own) { this.tone(900, 0.05, 0.08, 'square', 0.45); this.tone(700, 0.06, 0.08, 'square', 0.62); } // bolt cycle
+  }
+
+  /** LR-1 rocket leaving the tube: a thump and a rushing hiss. */
+  rocket(distance = 0, pan = 0): void {
+    const att = Math.min(1, 10 / Math.max(10, distance));
+    this.tone(70, 0.25, 0.8 * att, 'sine', 0, 35, pan);
+    this.burst({ gain: 0.9 * att, freq: 2500, q: 0.4, dur: 0.9, pan, attack: 0.02, verb: 0.7 });
+    this.burst({ gain: 0.5 * att, freq: 400, q: 0.6, dur: 0.6, type: 'lowpass', pan });
   }
 
   impact(distance: number, metal: boolean): void {

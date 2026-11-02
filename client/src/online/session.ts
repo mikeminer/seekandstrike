@@ -131,6 +131,7 @@ export class OnlineSession {
         if (s.reload) cmd.reload = true;
         if (s.tapOut) cmd.tapOut = true;
         if (s.grenade) cmd.grenade = true;
+        if (s.weapon) cmd.weapon = true;
         const seq = this.nextSeq++;
         this.outbox.push({ seq, cmd });
         if (this.predicting) this.predictor.predict(seq, cmd);

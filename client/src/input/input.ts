@@ -9,7 +9,7 @@ import type { Stance } from '@shared/sim/movement';
 export interface InputSnapshot {
   moveX: number; moveY: number;
   sprint: boolean; aim: boolean; fire: boolean; interact: boolean;
-  jump: boolean; reload: boolean; tapOut: boolean; restart: boolean; grenade: boolean;
+  jump: boolean; reload: boolean; tapOut: boolean; restart: boolean; grenade: boolean; weapon: boolean;
   stance: Stance;
 }
 
@@ -25,7 +25,7 @@ export class InputManager {
   private keys = new Set<string>();
   private mouseFire = false;
   private mouseAim = false;
-  private latched = { jump: false, reload: false, tapOut: false, restart: false, grenade: false };
+  private latched = { jump: false, reload: false, tapOut: false, restart: false, grenade: false, weapon: false };
   private lookX = 0;
   private lookY = 0;
   stance: Stance = 'stand';
@@ -92,19 +92,19 @@ export class InputManager {
       aim: this.mouseAim || this.touch.aim || this.aimToggle,
       fire: this.mouseFire || this.touch.fire,
       interact: k('KeyE') || this.touch.interact,
-      jump: this.latched.jump, reload: this.latched.reload, tapOut: this.latched.tapOut, restart: this.latched.restart, grenade: this.latched.grenade,
+      jump: this.latched.jump, reload: this.latched.reload, tapOut: this.latched.tapOut, restart: this.latched.restart, grenade: this.latched.grenade, weapon: this.latched.weapon,
       stance: this.stance,
     };
     return s;
   }
 
   /** Clear one-shot presses after a sim step consumed them. */
-  consumePresses(): void { this.latched.jump = false; this.latched.reload = false; this.latched.tapOut = false; this.latched.grenade = false; }
+  consumePresses(): void { this.latched.jump = false; this.latched.reload = false; this.latched.tapOut = false; this.latched.grenade = false; this.latched.weapon = false; }
   consumeRestart(): boolean { const r = this.latched.restart; this.latched.restart = false; return r; }
 
   toCombatInput(s: InputSnapshot, out: CombatInput, lookYaw: number, lookPitch: number): void {
     out.moveX = s.moveX; out.moveY = s.moveY; out.sprint = s.sprint && s.moveY > 0.5; out.jump = s.jump;
-    out.aim = s.aim; out.fire = s.fire; out.reload = s.reload; out.interact = s.interact; out.tapOut = s.tapOut; out.throwGrenade = s.grenade;
+    out.aim = s.aim; out.fire = s.fire; out.reload = s.reload; out.interact = s.interact; out.tapOut = s.tapOut; out.throwGrenade = s.grenade; out.switchWeapon = s.weapon;
     out.wantStance = s.stance; out.lookYaw = lookYaw; out.lookPitch = lookPitch;
   }
 

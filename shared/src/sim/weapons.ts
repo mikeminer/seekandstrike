@@ -6,8 +6,14 @@ import { type BulletSpec, type HitZone } from './ballistics';
 import { type Rng } from './rng';
 import type { Stance } from './movement';
 
+export type WeaponKind = 'rifle' | 'sniper' | 'launcher';
+
 export interface WeaponSpec {
   id: string;
+  /** rifle: automatic carbine · sniper: bolt-action with a magnified scope · launcher: fires rockets (no bullet). */
+  kind: WeaponKind;
+  /** World field of view (deg) when fully aimed; rifles use the default ADS zoom. */
+  adsFov?: number;
   /** Display name key (fictional 2030 rifle, no real-world trademarks). */
   name: string;
   calibre: string;
@@ -37,6 +43,7 @@ export interface WeaponSpec {
 /** 'R-30 Vettore', fictional 6.8 mm bullpup-less carbine of 2030 (generic, no real brand). */
 export const RIFLE_R30: WeaponSpec = {
   id: 'r30',
+  kind: 'rifle',
   name: 'R-30 Vettore',
   calibre: '6.8×51 mm',
   roundsPerMinute: 720,
@@ -65,6 +72,65 @@ export const RIFLE_R30: WeaponSpec = {
   spreadRecovery: 0.06,
   zoneMultiplier: { head: 3, torso: 1, limb: 0.7 },
 };
+
+/** 'SR-7 Falco', fictional bolt-action marksman rifle (Covert Ops primary). One shot to the head is a takedown. */
+export const SNIPER_SR7: WeaponSpec = {
+  id: 'sr7',
+  kind: 'sniper',
+  adsFov: 16,
+  name: 'SR-7 Falco',
+  calibre: '8.6×70 mm',
+  roundsPerMinute: 50, // bolt cycle 1.2 s
+  magazine: 5,
+  reserveMagazines: 4,
+  reloadTacticalSeconds: 3.0,
+  reloadEmptySeconds: 3.6,
+  adsSeconds: 0.32,
+  bullet: { muzzleVelocity: 960, dragK: 4.5e-4, maxLifetime: 3, baseDamage: 92, minEnergyFraction: 0.2 },
+  recoilPitch: 0.055,
+  recoilPitchJitter: 0.006,
+  recoilYaw: 0.004,
+  recoilRecovery: 0.22,
+  spreadHip: 0.075,
+  spreadAds: 0.0002,
+  spreadMovingAdd: 0.06,
+  spreadPerShot: 0,
+  spreadMax: 0.12,
+  spreadRecovery: 0.2,
+  zoneMultiplier: { head: 3, torso: 1.1, limb: 0.7 },
+};
+
+/** 'LR-1 Martello', fictional shoulder-fired rocket launcher (Soldier secondary). Fires a rocket (see grenade.ts ROCKET). */
+export const LAUNCHER_LR1: WeaponSpec = {
+  id: 'lr1',
+  kind: 'launcher',
+  name: 'LR-1 Martello',
+  calibre: '84 mm',
+  roundsPerMinute: 30,
+  magazine: 1,
+  reserveMagazines: 3,
+  reloadTacticalSeconds: 2.8,
+  reloadEmptySeconds: 2.8,
+  adsSeconds: 0.3,
+  bullet: { muzzleVelocity: 1, dragK: 0, maxLifetime: 0.01, baseDamage: 0, minEnergyFraction: 1 }, // unused: rockets are not bullets
+  recoilPitch: 0.06,
+  recoilPitchJitter: 0.01,
+  recoilYaw: 0.01,
+  recoilRecovery: 0.2,
+  spreadHip: 0.03,
+  spreadAds: 0.004,
+  spreadMovingAdd: 0.03,
+  spreadPerShot: 0,
+  spreadMax: 0.06,
+  spreadRecovery: 0.1,
+  zoneMultiplier: { head: 1, torso: 1, limb: 1 },
+};
+
+export const WEAPONS: Record<string, WeaponSpec> = { r30: RIFLE_R30, sr7: SNIPER_SR7, lr1: LAUNCHER_LR1 };
+export const weaponById = (id: string | undefined): WeaponSpec => (id && WEAPONS[id]) || RIFLE_R30;
+
+/** Seconds to put one weapon away and raise the other. */
+export const SWITCH_SECONDS = 0.45;
 
 export type WeaponPhase = 'ready' | 'reloading';
 

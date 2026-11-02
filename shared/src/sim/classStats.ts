@@ -4,6 +4,7 @@
  * every class here carries the same single rifle until more weapons exist.
  */
 import { PlayerClass } from './etClasses';
+import { LAUNCHER_LR1, RIFLE_R30, SNIPER_SR7, type WeaponSpec } from './weapons';
 
 export interface ClassStats {
   /** Frag grenades carried at spawn. */
@@ -27,6 +28,13 @@ export const CLASS_STATS: Record<PlayerClass, ClassStats> = {
   [PlayerClass.FieldOps]: { grenades: 4, plantScale: 1, regenScale: 1, canRevive: false, staminaScale: 1, canResupply: true },
   [PlayerClass.CovertOps]: { grenades: 1, plantScale: 1, regenScale: 1, canRevive: false, staminaScale: 1.5, canResupply: false },
 };
+
+/** Weapons per class: slot 0 primary, slot 1 secondary (switch with the WEAPON button). */
+export function classLoadout(cls: number): WeaponSpec[] {
+  if (cls === PlayerClass.CovertOps) return [SNIPER_SR7];
+  if (cls === PlayerClass.Soldier) return [RIFLE_R30, LAUNCHER_LR1];
+  return [RIFLE_R30];
+}
 
 export const classStats = (cls: number): ClassStats => CLASS_STATS[cls as PlayerClass] ?? CLASS_STATS[PlayerClass.Soldier];
 

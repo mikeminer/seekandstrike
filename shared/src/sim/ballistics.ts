@@ -50,6 +50,8 @@ export interface Projectile {
   energyScale: number;
   /** Server only: seconds the shooter's view lagged behind; targets are tested where they were that long ago. */
   lag?: number;
+  /** Weapon that fired it (damage and drag use its spec even if the shooter switches weapon meanwhile). */
+  weapon?: string;
 }
 
 export interface ProjectileImpact {

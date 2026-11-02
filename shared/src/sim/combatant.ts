@@ -1,9 +1,9 @@
 import { createHealth, type Health } from './health';
 import { createMoveState, MOVE, type MoveState, type Stance } from './movement';
-import { createWeapon, RIFLE_R30, type WeaponState } from './weapons';
+import { createWeapon, type WeaponState } from './weapons';
 import { type Vec3, v3 } from './vec';
 import { PlayerClass } from './etClasses';
-import { classStats } from './classStats';
+import { classLoadout, classStats } from './classStats';
 
 export type Team = 0 | 1; // 0 = attackers (player side), 1 = defenders
 
@@ -19,6 +19,8 @@ export interface CombatInput {
   tapOut: boolean;
   /** Throw a frag grenade (edge-triggered: one throw per press). */
   throwGrenade: boolean;
+  /** Switch between primary and secondary weapon (edge-triggered). */
+  switchWeapon?: boolean;
   wantStance: Stance;
   /** Look deltas applied this step (rad). Bots set yaw/pitch directly instead. */
   lookYaw: number;
@@ -42,7 +44,13 @@ export interface Combatant {
   kickPitch: number;
   kickYaw: number;
   move: MoveState;
+  /** Active weapon (always weapons[slot]). */
   weapon: WeaponState;
+  /** Carried weapons: [primary, secondary?] from the class loadout. */
+  weapons: WeaponState[];
+  slot: number;
+  /** Previous value of input.switchWeapon, for edge detection. */
+  prevSwitch: boolean;
   health: Health;
   input: CombatInput;
   kills: number;
@@ -68,12 +76,19 @@ export function createCombatant(id: number, team: Team, isBot: boolean, callsign
     id, team, isBot, callsign,
     pos: v3(), yaw: 0, pitch: 0, kickPitch: 0, kickYaw: 0,
     move: createMoveState(MOVE.staminaMax * classStats(cls).staminaScale),
-    weapon: createWeapon(RIFLE_R30),
+    ...loadoutState(cls),
+    prevSwitch: false,
     health: createHealth(),
     input: emptyInput(),
     kills: 0, deaths: 0, sinceShot: 99, speed: 0, downedFor: 0,
     cls, grenades: classStats(cls).grenades, grenadeCooldown: 0, prevThrow: false, lag: 0, spawnShield: 0,
   };
+}
+
+/** Fresh weapons for a class (primary active). */
+export function loadoutState(cls: number): { weapons: WeaponState[]; slot: number; weapon: WeaponState } {
+  const weapons = classLoadout(cls).map(createWeapon);
+  return { weapons, slot: 0, weapon: weapons[0]! };
 }
 
 export const eyeHeight = (c: Combatant): number =>

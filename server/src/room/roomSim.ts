@@ -306,6 +306,7 @@ export class RoomSim {
       case 'impact': this.events.push({ e: 'impact', x: r2(e.point.x), y: r2(e.point.y), z: r2(e.point.z), mat: e.material, ...(e.targetId !== undefined ? { tgt: e.targetId } : {}) }); break;
       case 'damage': this.events.push({ e: 'damage', by: e.attacker, vic: e.victim, amt: r2(e.amount), zone: e.zone, out: e.outcome }); break;
       case 'grenade': this.events.push({ e: 'grenade', by: e.thrower, x: r2(e.pos.x), y: r2(e.pos.y), z: r2(e.pos.z) }); break;
+      case 'rocket': this.events.push({ e: 'rocket', by: e.shooter, x: r2(e.pos.x), y: r2(e.pos.y), z: r2(e.pos.z) }); break;
       case 'explosion': this.events.push({ e: 'explosion', by: e.thrower, x: r2(e.pos.x), y: r2(e.pos.y), z: r2(e.pos.z) }); break;
       case 'revive': this.events.push({ e: 'revive', by: e.medic, vic: e.patient }); break;
       case 'resupply': this.events.push({ e: 'resupply', by: e.giver, vic: e.recipient, n: e.rounds }); break;
@@ -319,7 +320,7 @@ export class RoomSim {
   /** Shots and hits of human shooters feed the aim statistics (grenade blasts and friendly fire do not count). */
   private recordForMonitor(e: SimEvent): void {
     if (e.type === 'shot') this.seats.get(e.shooter)?.monitor.shot();
-    else if (e.type === 'damage' && e.attacker !== e.victim && e.zone !== 'blast') this.seats.get(e.attacker)?.monitor.hit(e.zone === 'head');
+    else if (e.type === 'damage' && e.attacker !== e.victim && e.zone !== 'blast' && e.zone !== 'rocket') this.seats.get(e.attacker)?.monitor.hit(e.zone === 'head');
   }
 
   private players(): SnapPlayer[] {
@@ -328,7 +329,7 @@ export class RoomSim {
       x: r2(c.pos.x), y: r2(c.pos.y), z: r2(c.pos.z), yw: r3(c.yaw), pt: r3(c.pitch),
       st: c.move.stance === 'stand' ? 0 : c.move.stance === 'crouch' ? 1 : 2,
       lf: c.health.state === 'alive' ? 0 : c.health.state === 'downed' ? 1 : 2,
-      hp: Math.round(c.health.hp), sp: r2(c.speed), hu: this.seats.has(c.id) ? 1 : 0, k: c.kills, d: c.deaths,
+      hp: Math.round(c.health.hp), sp: r2(c.speed), hu: this.seats.has(c.id) ? 1 : 0, k: c.kills, d: c.deaths, ...(c.slot === 1 ? { ws: 1 as const } : {}),
       ...(c.weapon.phase === 'reloading' ? { rl: 1 as const } : {}),
       ...(c.input.aim ? { ad: 1 as const } : {}),
     }));
@@ -339,7 +340,7 @@ export class RoomSim {
     const out = new Map<number, Snapshot>();
     const players = this.players();
     const o = this.match.objective;
-    const grenades = this.match.grenades.map((g) => ({ id: g.id, x: r2(g.pos.x), y: r2(g.pos.y), z: r2(g.pos.z) }));
+    const grenades = this.match.grenades.map((g) => ({ id: g.id, x: r2(g.pos.x), y: r2(g.pos.y), z: r2(g.pos.z), ...(g.rocket ? { r: 1 as const } : {}) }));
     const obj = { charge: o.charge, progress: r2(o.progress), fuse: r2(o.fuse), clock: r2(o.clock), phase: o.phase };
     const ev = this.events;
     for (const seat of this.seats.values()) {

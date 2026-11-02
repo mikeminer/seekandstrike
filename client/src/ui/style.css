@@ -163,3 +163,11 @@ input, select, textarea, .pass code, .pass .addr { -webkit-user-select: text; us
 .hud .voice { position: absolute; left: calc(10px + var(--sl)); top: calc(118px + var(--st)); font-size: 12px; color: #9fd18b; line-height: 1.5; }
 .b-talk { left: calc(22px + var(--sl)); top: calc(28% + var(--st)); width: 56px; height: 56px; background: #2a6a3a80; }
 .b-talk.active { background: #3fbf5fcc; border-color: #9fffb0; }
+
+/* Sniper scope: dark surround, round field of view, fine reticle. */
+.hud .scope { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, transparent 0, transparent min(42vh, 42vw), #000 calc(min(42vh, 42vw) + 2px)); }
+.hud .scope i { position: absolute; background: #000c; }
+.hud .scope .sh { left: calc(50% - min(42vh, 42vw)); right: calc(50% - min(42vh, 42vw)); top: 50%; height: 1px; }
+.hud .scope .sv { top: calc(50% - min(42vh, 42vw)); bottom: calc(50% - min(42vh, 42vw)); left: 50%; width: 1px; }
+.hud .scope::after { content: ''; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #e0302088; }
+.b-weapon { right: calc(196px + var(--sr)); bottom: calc(210px + var(--sb)); width: 54px; height: 54px; background: #3a3f2a99; }

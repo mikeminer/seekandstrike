@@ -93,6 +93,10 @@ export class Game {
   private grenadeMeshes = new Map<number, THREE.Mesh>();
   private grenadeGeo = new THREE.SphereGeometry(0.05, 10, 8);
   private grenadeMat = new THREE.MeshStandardMaterial({ color: 0x2f3a28, roughness: 0.6, metalness: 0.35 });
+  private rocketGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.6, 12).rotateX(Math.PI / 2);
+  private rocketMat = new THREE.MeshStandardMaterial({ color: 0x4b5137, roughness: 0.6, metalness: 0.3 });
+  private flameGeo = new THREE.ConeGeometry(0.06, 0.5, 10).rotateX(-Math.PI / 2).translate(0, 0, 0.5);
+  private flameMat = new THREE.MeshBasicMaterial({ color: 0xffb040, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
   private lastLook = { dx: 0, dy: 0 };
   /** Per-match report of the local player (XP, challenges, stats). */
   private tracker: MatchTracker | null = null;
@@ -130,7 +134,10 @@ export class Game {
       this.touch = new TouchControls(parent, this.input);
       this.touch.getAdsScale = () => this.lookScale(true);
       this.touch.onTalk = (down) => { if (down) void this.voice?.press(); else this.voice?.release(); };
+      this.touch.onWeapon = () => this.input.press('weapon');
     }
+    // Weapon switch on desktop: Q.
+    window.addEventListener('keydown', (e) => { if (e.code === 'KeyQ' && !e.repeat) this.input.press('weapon'); });
     // Push-to-talk on desktop: hold V (online only).
     window.addEventListener('keydown', (e) => { if (e.code === 'KeyV' && !e.repeat && this.voice) void this.voice.press(); });
     window.addEventListener('keyup', (e) => { if (e.code === 'KeyV') this.voice?.release(); });
@@ -302,8 +309,11 @@ export class Game {
 
   /** Look multiplier: hip or aimed sensitivity from the settings, times the touch aim assist. */
   private lookScale(touch: boolean): number {
-    const ads = (this.match?.player?.weapon.ads ?? 0) > 0.5;
-    const base = ads ? LOOK.adsScale * this.sens.aim : this.sens.look;
+    const w = this.match?.player?.weapon;
+    const ads = (w?.ads ?? 0) > 0.5;
+    // A stronger zoom (sniper scope) slows the look in proportion, so the reticle crosses the view at the usual speed.
+    const zoom = w?.spec.adsFov ? Math.tan((w.spec.adsFov * Math.PI) / 360) / Math.tan((WORLD_FOV.ads * Math.PI) / 360) : 1;
+    const base = ads ? LOOK.adsScale * this.sens.aim * zoom : this.sens.look;
     return base * (touch ? this.assist : 1);
   }
 
@@ -393,7 +403,7 @@ export class Game {
     const look = this.input.takeLook();
     const adsScale = p.weapon.ads > 0.5 ? LOOK.adsScale : 1;
     if (p.health.state === 'alive' && m.phase === 'playing') {
-      const s = this.touch ? 1 : adsScale * (p.weapon.ads > 0.5 ? this.sens.aim : this.sens.look); // touch applies its scale at the source
+      const s = this.touch ? 1 : this.lookScale(false) / (p.weapon.ads > 0.5 ? 1 : 1); // touch applies its scale at the source
       p.yaw -= look.dx * s;
       p.pitch = clamp(p.pitch - look.dy * s, -1.45, 1.45);
     }
@@ -467,7 +477,8 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
       switch (e.type) {
         case 'shot': {
           const own = e.shooter === p.id;
-          this.sfx.shot(own ? 0 : distXZ(e.origin, listener), own ? 0 : panOf(e.origin), own);
+          const heavy = m.combatants[e.shooter]?.weapon.spec.kind === 'sniper';
+          this.sfx.shot(own ? 0 : distXZ(e.origin, listener), own ? 0 : panOf(e.origin), own, heavy);
           if (!own) this.flashUntil.set(e.shooter, m.time + 0.035);
           break;
         }
@@ -515,6 +526,15 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
         case 'grenade':
           if (e.thrower === p.id) this.sfx.throwGrenade();
           else this.sfx.throwGrenade(distXZ(e.pos, listener), panOf(e.pos));
+          break;
+        case 'rocket': {
+          const own = e.shooter === p.id;
+          this.sfx.rocket(own ? 0 : distXZ(e.pos, listener), own ? 0 : panOf(e.pos));
+          if (own) this.camShake = Math.max(this.camShake, 0.35);
+          break;
+        }
+        case 'switch':
+          if (e.who === p.id) this.sfx.ui();
           break;
         case 'grenadeBounce':
           this.sfx.bounce(distXZ(e.pos, listener), panOf(e.pos));
@@ -608,10 +628,16 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
       live.add(g.id);
       let mesh = this.grenadeMeshes.get(g.id);
       if (!mesh) {
-        mesh = new THREE.Mesh(this.grenadeGeo, this.grenadeMat);
+        mesh = g.rocket ? new THREE.Mesh(this.rocketGeo, this.rocketMat) : new THREE.Mesh(this.grenadeGeo, this.grenadeMat);
+        if (g.rocket) mesh.add(new THREE.Mesh(this.flameGeo, this.flameMat));
         mesh.castShadow = true;
         this.grenadeMeshes.set(g.id, mesh);
         this.scene.add(mesh);
+      }
+      if (g.rocket) {
+        // Point the rocket along its flight (from the previous frame's position when no velocity is known online).
+        const dx = g.pos.x - mesh.position.x, dy = g.pos.y - mesh.position.y, dz = g.pos.z - mesh.position.z;
+        if (dx * dx + dy * dy + dz * dz > 1e-6) mesh.lookAt(mesh.position.x + dx * 10, mesh.position.y + dy * 10, mesh.position.z + dz * 10);
       }
       mesh.position.set(g.pos.x, g.pos.y, g.pos.z);
     }
@@ -636,7 +662,8 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     if (this.camDiagAge > 0.5) { this.camDiagAge = 0; this.camDiag = 0; }
     this.camDiag = Math.max(this.camDiag, Math.abs(this.camera.position.y - this.camPrevY) * 1000);
     this.camPrevY = this.camera.position.y;
-    this.camera.fov = WORLD_FOV.hip - p.weapon.ads * (WORLD_FOV.hip - WORLD_FOV.ads);
+    this.camera.fov = WORLD_FOV.hip - p.weapon.ads * (WORLD_FOV.hip - (p.weapon.spec.adsFov ?? WORLD_FOV.ads));
+    this.hud.scope = p.weapon.spec.kind === 'sniper' && p.weapon.ads > 0.9 && p.health.state === 'alive';
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
 
@@ -683,6 +710,7 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
       alive: p.health.state === 'alive',
       ended: m.phase !== 'playing',
     });
+    this.touch?.setWeaponVisible(p.weapons.length > 1 && p.health.state === 'alive');
   }
 
   /** Place the player (used by restart tooling and dev automation). */

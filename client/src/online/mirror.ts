@@ -1,6 +1,6 @@
 import type { Snapshot, SnapEvent } from '@shared/protocol';
 import { AabbHost, Match, PACE, type SimEvent } from '@shared/sim/match';
-import type { Combatant } from '@shared/sim/combatant';
+import { type Combatant, loadoutState } from '@shared/sim/combatant';
 import type { MapDef } from '@shared/map/types';
 import { raycastStatic } from '@shared/map/query';
 import { HEALTH, WaveClock } from '@shared/sim/health';
@@ -46,6 +46,10 @@ export class Mirror {
     for (const p of snap.players) {
       const c = m.combatants[p.id];
       if (!c) continue;
+      // Class and active weapon (loadout rebuilt when the class changes, e.g. at the first snapshot).
+      if (c.cls !== p.cl) Object.assign(c, loadoutState(p.cl), { cls: p.cl });
+      const slot = p.ws === 1 && c.weapons.length > 1 ? 1 : 0;
+      if (c.slot !== slot) { c.slot = slot; c.weapon = c.weapons[slot]!; c.weapon.ads = 0; }
       if (p.id !== m.playerId) {
         // Others: only the reload/aim flags drive their animation (the own weapon is handled from `snap.self`).
         const w = c.weapon;
@@ -121,6 +125,11 @@ export class Mirror {
       case 'damage':
         return { type: 'damage', attacker: e.by, victim: e.vic, amount: e.amt, zone: e.zone, outcome: e.out };
       case 'grenade': return { type: 'grenade', thrower: e.by, id: 0, pos: v3(e.x, e.y, e.z) };
+      case 'rocket': {
+        const sh = m.combatants[e.by];
+        if (sh) { sh.sinceShot = 0; sh.weapon.shotsFired++; }
+        return { type: 'rocket', shooter: e.by, id: 0, pos: v3(e.x, e.y, e.z) };
+      }
       case 'explosion': return { type: 'explosion', pos: v3(e.x, e.y, e.z), thrower: e.by };
       case 'revive': return { type: 'revive', medic: e.by, patient: e.vic };
       case 'resupply': return { type: 'resupply', giver: e.by, recipient: e.vic, rounds: e.n };
@@ -175,7 +184,7 @@ export class Mirror {
     }
     this.grenadeY = seen;
     this.match.grenades = poses.map((g): Grenade => ({
-      id: g.id, ownerId: -1, team: 0, pos: v3(g.x, g.y, g.z), vel: v3(), fuse: 1, alive: true, bounces: 0,
+      id: g.id, ownerId: -1, team: 0, pos: v3(g.x, g.y, g.z), vel: v3(), fuse: 1, alive: true, bounces: 0, ...(g.r ? { rocket: true } : {}),
     }));
     return out;
   }

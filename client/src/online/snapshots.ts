@@ -73,12 +73,12 @@ export function interpolatePoses(s: Sample): Map<number, Pose> {
   return out;
 }
 
-export interface GrenadePose { id: number; x: number; y: number; z: number }
+export interface GrenadePose { id: number; x: number; y: number; z: number; r?: 1 }
 export function interpolateGrenades(s: Sample): GrenadePose[] {
   const byId = new Map(s.a.grenades.map((g) => [g.id, g] as const));
   return s.b.grenades.map((gb) => {
     const ga = byId.get(gb.id);
     if (!ga) return gb;
-    return { id: gb.id, x: lerp(ga.x, gb.x, s.t), y: lerp(ga.y, gb.y, s.t), z: lerp(ga.z, gb.z, s.t) };
+    return { id: gb.id, x: lerp(ga.x, gb.x, s.t), y: lerp(ga.y, gb.y, s.t), z: lerp(ga.z, gb.z, s.t), ...(gb.r ? { r: gb.r } : {}) };
   });
 }

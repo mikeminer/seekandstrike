@@ -5,15 +5,15 @@
  * including projectile hits against the static map — is resolved here so the same code can
  * run authoritative on the server later.
  */
-import { type Combatant, type Team, createCombatant, emptyInput, eyePos } from './combatant';
+import { type Combatant, type Team, createCombatant, emptyInput, eyePos, loadoutState } from './combatant';
 import { applyDamage, respawn, revive, tapOut, tickHealth, WaveClock } from './health';
-import { type Grenade, GRENADE, blastDamage, stepGrenade, throwGrenade } from './grenade';
+import { type Grenade, GRENADE, ROCKET, blastDamage, launchRocket, rocketDamage, stepGrenade, throwGrenade } from './grenade';
 import { BOT_CLASS_ORDER, RESUPPLY, REVIVE_RADIUS, REVIVE_SECONDS, classStats } from './classStats';
 import type { PlayerClass } from './etClasses';
 import { MOVE, type Stance } from './movement';
 import { stepCombatantMovement } from './playerMove';
 import { type Projectile, type ProjectileImpact, type RayHit, spawnProjectile, stepProjectile } from './ballistics';
-import { startReload, tickWeapon, tryFire } from './weapons';
+import { SWITCH_SECONDS, startReload, tickWeapon, tryFire, weaponById } from './weapons';
 import { createObjective, OBJECTIVE, tickObjective, type ObjectiveEvent, type ObjectiveState } from './objective';
 import { createBrain, skillFor, thinkBot, type BotBrain } from './bot';
 import { hitVolumes, rayCapsule } from './hitbox';
@@ -50,6 +50,8 @@ export type SimEvent =
   | { type: 'wave'; team: Team }
   | { type: 'objective'; event: Exclude<ObjectiveEvent, null>; /** Who planted/defused (when known). */ by?: number }
   | { type: 'grenade'; thrower: number; id: number; pos: Vec3 }
+  | { type: 'rocket'; shooter: number; id: number; pos: Vec3 }
+  | { type: 'switch'; who: number; slot: number }
   | { type: 'grenadeBounce'; pos: Vec3 }
   | { type: 'explosion'; pos: Vec3; thrower: number }
   | { type: 'revive'; medic: number; patient: number }
@@ -154,10 +156,13 @@ export class Match {
     c.prevThrow = false;
     c.move.grounded = true;
     respawn(c.health);
-    const spec = c.weapon.spec;
-    c.weapon.inMag = spec.magazine - 1; c.weapon.chambered = true;
-    c.weapon.reserve = spec.magazine * spec.reserveMagazines;
-    c.weapon.phase = 'ready'; c.weapon.cooldown = 0; c.weapon.bloom = 0;
+    for (const w of c.weapons) {
+      const spec = w.spec;
+      w.inMag = spec.magazine - 1; w.chambered = true;
+      w.reserve = spec.magazine * spec.reserveMagazines;
+      w.phase = 'ready'; w.cooldown = 0; w.bloom = 0; w.ads = 0;
+    }
+    c.slot = 0; c.weapon = c.weapons[0]!; c.prevSwitch = false;
     c.downedFor = 0;
     c.spawnShield = this.time > 0 ? PACE.spawnShieldSeconds : 0;
     const b = this.brains.get(c.id);
@@ -175,6 +180,7 @@ export class Match {
     this.brains.delete(id);
     c.input = emptyInput();
     c.cls = cls;
+    Object.assign(c, loadoutState(cls));
     const st = classStats(cls);
     c.move.staminaMax = MOVE.staminaMax * st.staminaScale;
     c.move.stamina = c.move.staminaMax;
@@ -273,6 +279,17 @@ export class Match {
     }
     c.prevThrow = inp.throwGrenade;
 
+    // Weapon switch (primary ↔ secondary): the new weapon needs a moment to come up.
+    const wantSwitch = !!inp.switchWeapon;
+    if (wantSwitch && !c.prevSwitch && c.weapons.length > 1 && c.weapon.phase !== 'reloading') {
+      c.weapon.ads = 0;
+      c.slot = (c.slot + 1) % c.weapons.length;
+      c.weapon = c.weapons[c.slot]!;
+      c.weapon.cooldown = Math.max(c.weapon.cooldown, SWITCH_SECONDS);
+      this.events.push({ type: 'switch', who: c.id, slot: c.slot });
+    }
+    c.prevSwitch = wantSwitch;
+
     // Weapon.
     tickWeapon(c.weapon, dt, inp.aim && !c.move.sprinting);
     if (inp.reload && startReload(c.weapon)) this.events.push({ type: 'reload', who: c.id });
@@ -285,14 +302,24 @@ export class Match {
       if (shot) {
         const origin = eyePos(c);
         const dir = dirFromYawPitch(c.yaw + c.kickYaw + shot.spreadYaw, c.pitch + c.kickPitch + shot.spreadPitch);
-        const p = spawnProjectile(this.nextProjectile++, c.id, c.team, origin, dir, c.weapon.spec.bullet);
-        if (c.lag > 0) p.lag = c.lag;
-        this.projectiles.push(p);
-        c.kickPitch += shot.kickPitch;
-        c.kickYaw += shot.kickYaw;
-        c.sinceShot = 0;
-        c.spawnShield = 0; // protection ends when you open fire
-        this.events.push({ type: 'shot', shooter: c.id, origin, dir, projectile: p.id });
+        if (c.weapon.spec.kind === 'launcher') {
+          const g = launchRocket(this.nextGrenade++, c.id, c.team, origin, dir);
+          this.grenades.push(g);
+          c.kickPitch += shot.kickPitch;
+          c.sinceShot = 0;
+          c.spawnShield = 0;
+          this.events.push({ type: 'rocket', shooter: c.id, id: g.id, pos: { ...origin } });
+        } else {
+          const p = spawnProjectile(this.nextProjectile++, c.id, c.team, origin, dir, c.weapon.spec.bullet);
+          p.weapon = c.weapon.spec.id;
+          if (c.lag > 0) p.lag = c.lag;
+          this.projectiles.push(p);
+          c.kickPitch += shot.kickPitch;
+          c.kickYaw += shot.kickYaw;
+          c.sinceShot = 0;
+          c.spawnShield = 0; // protection ends when you open fire
+          this.events.push({ type: 'shot', shooter: c.id, origin, dir, projectile: p.id });
+        }
       } else if (c.weapon.phase === 'ready' && !c.weapon.chambered && c.weapon.cooldown <= 0 && startReload(c.weapon)) {
         // Auto-reload on empty trigger pull.
         this.events.push({ type: 'reload', who: c.id });
@@ -375,14 +402,15 @@ export class Match {
       const owner = this.combatants[p.ownerId]!;
       // A lagging shooter's rounds are tested against where the targets were in the shooter's view.
       const rewind = p.lag ? (from: Vec3, dir: Vec3, max: number, ignore: number): RayHit | null => this.raycast(from, dir, max, ignore, this.time - p.lag!) : this.raycast;
-      stepProjectile(p, owner.weapon.spec.bullet, dt, rewind, out);
+      const spec = weaponById(p.weapon);
+      stepProjectile(p, spec.bullet, dt, rewind, out);
       for (const imp of out) {
         const h = imp.hit;
         this.events.push({ type: 'impact', point: h.point, normal: h.normal, material: h.material, targetId: h.targetId, penetrated: imp.penetrated });
         if (h.targetId !== undefined) {
           const victim = this.combatants[h.targetId]!;
           if (victim.spawnShield > 0) continue;
-          const amount = imp.damage * owner.weapon.spec.zoneMultiplier[h.zone ?? 'torso'];
+          const amount = imp.damage * spec.zoneMultiplier[h.zone ?? 'torso'];
           const outcome = applyDamage(victim.health, amount, owner.id);
           if (outcome === 'downed') owner.kills++;
           this.events.push({ type: 'damage', attacker: owner.id, victim: victim.id, amount, zone: h.zone ?? 'torso', outcome });
@@ -395,7 +423,16 @@ export class Match {
   private stepGrenades(dt: number): void {
     for (const g of this.grenades) {
       const bounces = stepGrenade(g, dt, this.map);
-      if (bounces > 0) this.events.push({ type: 'grenadeBounce', pos: { ...g.pos } });
+      if (g.rocket) {
+        // A rocket also detonates on a soldier it flies into (not its shooter right after launch).
+        const flown = ROCKET.maxFlightSeconds - g.fuse;
+        for (const c of this.combatants) {
+          if (g.fuse <= 0 || c.health.state === 'dead' || (c.id === g.ownerId && flown < ROCKET.armSeconds)) continue;
+          const top = c.pos.y + (c.health.state === 'downed' || c.move.stance === 'prone' ? 0.5 : c.move.stance === 'crouch' ? 1.2 : 1.8);
+          if (g.pos.y < c.pos.y - 0.1 || g.pos.y > top + 0.1) continue;
+          if (Math.hypot(g.pos.x - c.pos.x, g.pos.z - c.pos.z) <= ROCKET.hitRadius) g.fuse = 0;
+        }
+      } else if (bounces > 0) this.events.push({ type: 'grenadeBounce', pos: { ...g.pos } });
       if (g.fuse <= 0 && g.alive) { this.explode(g); g.alive = false; }
     }
     this.grenades = this.grenades.filter((g) => g.alive);
@@ -411,13 +448,13 @@ export class Match {
       if (c.spawnShield > 0) continue;
       const body = v3(c.pos.x, c.pos.y + (c.health.state === 'downed' || c.move.stance === 'prone' ? 0.25 : c.move.stance === 'crouch' ? 0.85 : 1.25), c.pos.z);
       const d = Math.hypot(body.x - centre.x, body.y - centre.y, body.z - centre.z);
-      let amount = blastDamage(d);
+      let amount = g.rocket ? rocketDamage(d) : blastDamage(d);
       if (amount <= 0) continue;
       if (!lineOfSight(this.map, centre, body)) continue;
       if (c.id === g.ownerId) amount *= GRENADE.selfScale;
       const outcome = applyDamage(c.health, amount, g.ownerId);
       if (outcome === 'downed' && c.id !== g.ownerId) owner.kills++;
-      this.events.push({ type: 'damage', attacker: g.ownerId, victim: c.id, amount, zone: 'blast', outcome });
+      this.events.push({ type: 'damage', attacker: g.ownerId, victim: c.id, amount, zone: g.rocket ? 'rocket' : 'blast', outcome });
     }
   }
 
@@ -464,13 +501,13 @@ export class Match {
       if (!classStats(g.cls).canResupply || g.health.state !== 'alive') continue;
       for (const r of this.combatants) {
         if (r.team !== g.team || r.health.state !== 'alive') continue;
-        const spec = r.weapon.spec, cap = spec.magazine * spec.reserveMagazines;
-        if (r.weapon.reserve >= spec.magazine * RESUPPLY.lowMagazines || r.weapon.reserve >= cap) continue;
+        const w = r.weapons[0]!, spec = w.spec, cap = spec.magazine * spec.reserveMagazines;
+        if (w.reserve >= spec.magazine * RESUPPLY.lowMagazines || w.reserve >= cap) continue;
         if (r.id !== g.id && distXZ(g.pos, r.pos) > RESUPPLY.radius) continue;
         const key = `${g.id}:${r.id}`;
         if ((this.resupplyReady.get(key) ?? 0) > this.time) continue;
-        const rounds = Math.min(spec.magazine, cap - r.weapon.reserve);
-        r.weapon.reserve += rounds;
+        const rounds = Math.min(spec.magazine, cap - w.reserve);
+        w.reserve += rounds;
         this.resupplyReady.set(key, this.time + (r.id === g.id ? RESUPPLY.selfCooldown : RESUPPLY.cooldown));
         this.events.push({ type: 'resupply', giver: g.id, recipient: r.id, rounds });
       }

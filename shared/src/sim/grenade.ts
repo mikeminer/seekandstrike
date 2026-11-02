@@ -31,6 +31,8 @@ export const GRENADE = {
 
 export interface Grenade {
   id: number;
+  /** A launcher rocket: straight fast flight, explodes on the first contact (map or soldier). */
+  rocket?: boolean;
   ownerId: number;
   team: 0 | 1;
   pos: Vec3;
@@ -39,6 +41,32 @@ export interface Grenade {
   alive: boolean;
   bounces: number;
 }
+
+export const ROCKET = {
+  speed: 42,
+  gravity: 1.2,
+  maxFlightSeconds: 3,
+  /** Distance from a soldier's body axis that sets it off. */
+  hitRadius: 0.55,
+  /** Owner immunity from its own rocket right after launch (s). */
+  armSeconds: 0.12,
+  /** Blast compared with a grenade: same shape, scaled range and damage. */
+  rangeScale: 1.15,
+  damageScale: 1.25,
+} as const;
+
+/** Rocket from the launcher's muzzle along the aim direction. */
+export function launchRocket(id: number, ownerId: number, team: 0 | 1, origin: Vec3, dir: Vec3): Grenade {
+  return {
+    id, ownerId, team, rocket: true,
+    pos: v3(origin.x + dir.x * 0.7, origin.y + dir.y * 0.7, origin.z + dir.z * 0.7),
+    vel: v3(dir.x * ROCKET.speed, dir.y * ROCKET.speed, dir.z * ROCKET.speed),
+    fuse: ROCKET.maxFlightSeconds, alive: true, bounces: 0,
+  };
+}
+
+/** Rocket blast damage at `distance` m (before line of sight). */
+export const rocketDamage = (distance: number): number => blastDamage(distance / ROCKET.rangeScale) * ROCKET.damageScale;
 
 /** Throw direction: aim yaw/pitch plus the lob angle. */
 export function throwGrenade(id: number, ownerId: number, team: 0 | 1, origin: Vec3, yaw: number, pitch: number, ownerVel: Vec3): Grenade {
@@ -89,9 +117,10 @@ export function stepGrenade(g: Grenade, dt: number, map: MapDef): number {
   const n = Math.max(1, Math.ceil(dt / GRENADE.maxSubstep));
   const h = dt / n;
   for (let i = 0; i < n; i++) {
-    g.vel.y -= GRENADE.gravity * h;
+    g.vel.y -= (g.rocket ? ROCKET.gravity : GRENADE.gravity) * h;
     g.pos.x += g.vel.x * h; g.pos.y += g.vel.y * h; g.pos.z += g.vel.z * h;
     bounces += collide(g, map);
+    if (g.rocket && bounces > 0) { g.fuse = 0; break; } // contact: detonate here
   }
   if (g.pos.y < -4) g.alive = false;
   g.bounces += bounces;

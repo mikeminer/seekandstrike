@@ -27,6 +27,7 @@ export class Hud {
     this.root.className = 'hud';
     this.root.innerHTML = `
       <div class="vignette" data-k="vig"></div>
+      <div class="scope" data-k="scope" hidden><i class="sh"></i><i class="sv"></i></div>
       <div class="tl"><div class="small" data-k="stance"></div><div class="hp" data-k="hpbar"><i data-k="hp"></i></div>
         <div class="small" data-k="wave"></div></div>
       <div class="tc"><div class="team" data-k="team"></div><div class="clock" data-k="clock"></div>
@@ -78,6 +79,8 @@ export class Hud {
     this.el.tut!.hidden = text === null;
     if (text !== null && this.el.tutT!.textContent !== text) this.el.tutT!.textContent = text;
   }
+  /** Sniper scope overlay (the 3D weapon hides meanwhile). */
+  set scope(on: boolean) { if (this.el.scope!.hidden === on) this.el.scope!.hidden = !on; }
   set tutorialSkipLabel(v: string) { this.el.tutSkip!.textContent = v; }
   private lastSpeakers = '';
   /** Teammates speaking on team voice right now. */

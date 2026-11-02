@@ -34,7 +34,7 @@ export class MatchTracker {
               if (e.zone === 'head') { r.headshots++; out.push({ xp: XP.kill + XP.headshot, label: 'headshot' }); }
               else if (e.zone === 'blast') { r.grenadeKills++; out.push({ xp: XP.kill + XP.grenadeKill, label: 'grenade' }); }
               else out.push({ xp: XP.kill, label: 'kill' });
-              if (aimed > 0.8 && e.zone !== 'blast') r.adsKills++;
+              if (aimed > 0.8 && e.zone !== 'blast' && e.zone !== 'rocket') r.adsKills++;
             } else if (e.outcome === 'hurt') out.push({ xp: 0, label: 'hit' });
           }
           if (e.victim === this.playerId && e.outcome === 'downed') { r.deaths++; this.streak = 0; }

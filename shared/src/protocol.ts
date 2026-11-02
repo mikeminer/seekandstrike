@@ -53,6 +53,8 @@ export interface SnapPlayer {
   k: number; d: number;
   /** Present (1) only while reloading / holding aim, so others' animations match; omitted otherwise. */
   rl?: 1; ad?: 1;
+  /** Present (1) while the secondary weapon is in hand. */
+  ws?: 1;
 }
 
 export interface SnapSelf {
@@ -66,6 +68,7 @@ export type SnapEvent =
   | { e: 'impact'; x: number; y: number; z: number; mat: string; tgt?: number }
   | { e: 'damage'; by: number; vic: number; amt: number; zone: string; out: string }
   | { e: 'grenade'; by: number; x: number; y: number; z: number }
+  | { e: 'rocket'; by: number; x: number; y: number; z: number }
   | { e: 'explosion'; by: number; x: number; y: number; z: number }
   | { e: 'revive'; by: number; vic: number }
   | { e: 'resupply'; by: number; vic: number; n: number }
@@ -83,7 +86,8 @@ export interface Snapshot {
   you: number;
   self: SnapSelf;
   players: SnapPlayer[];
-  grenades: { id: number; x: number; y: number; z: number }[];
+  /** `r: 1` marks a launcher rocket. */
+  grenades: { id: number; x: number; y: number; z: number; r?: 1 }[];
   obj: { charge: string; progress: number; fuse: number; clock: number; phase: string };
   ev: SnapEvent[];
 }
@@ -105,8 +109,8 @@ export function parseCmd(raw: unknown): MoveCmd | null {
   if (m.stance !== 0 && m.stance !== 1 && m.stance !== 2) return null;
   const flag = (v: unknown): boolean | null => (v === undefined ? false : typeof v === 'boolean' ? v : null);
   const sprint = flag(m.sprint), aim = flag(m.aim), fire = flag(m.fire), interact = flag(m.interact);
-  const jump = flag(m.jump), reload = flag(m.reload), tapOut = flag(m.tapOut), grenade = flag(m.grenade);
-  if ([sprint, aim, fire, interact, jump, reload, tapOut, grenade].some((f) => f === null)) return null;
+  const jump = flag(m.jump), reload = flag(m.reload), tapOut = flag(m.tapOut), grenade = flag(m.grenade), weapon = flag(m.weapon);
+  if ([sprint, aim, fire, interact, jump, reload, tapOut, grenade, weapon].some((f) => f === null)) return null;
   const out: MoveCmd = { moveX: m.moveX, moveY: m.moveY, yaw: m.yaw, pitch: m.pitch, stance: m.stance, sprint: sprint!, aim: aim!, fire: fire!, interact: interact! };
   if (m.vt !== undefined) {
     if (!isNum(m.vt, 0, 1e6)) return null;
@@ -116,6 +120,7 @@ export function parseCmd(raw: unknown): MoveCmd | null {
   if (reload) out.reload = true;
   if (tapOut) out.tapOut = true;
   if (grenade) out.grenade = true;
+  if (weapon) out.weapon = true;
   return out;
 }
 

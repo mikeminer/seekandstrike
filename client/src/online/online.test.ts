@@ -22,7 +22,7 @@ const snap = (tick: number, players: SnapPlayer[], grenades: Snapshot['grenades'
 });
 const keys = (over: Partial<InputSnapshot> = {}): InputSnapshot => ({
   moveX: 0, moveY: 0, sprint: false, aim: false, fire: false, interact: false, jump: false, reload: false, tapOut: false,
-  restart: false, grenade: false, stance: 'stand', ...over,
+  restart: false, grenade: false, weapon: false, stance: 'stand', ...over,
 });
 
 describe('snapshot interpolation', () => {
