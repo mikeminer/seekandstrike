@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy — SEEK &amp; STRIKE</title>
+  <meta name="ss-title-en" content="Privacy — SEEK &amp; STRIKE">
+  <meta name="ss-title-it" content="Privacy — SEEK &amp; STRIKE">
+  <meta name="description" content="What data SEEK & STRIKE uses, where it goes and what is never collected.">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/"><img src="/assets/logo.webp" alt="SEEK &amp; STRIKE" width="180" height="31"></a>
+  <div class="lang push" role="group" aria-label="Language"><button data-l="en" aria-pressed="true">EN</button><button data-l="it" aria-pressed="false">IT</button></div>
+</div></header>
+
+<main class="legal">
+<div data-lang-only="en">
+  <h1>Privacy</h1>
+  <p class="updated">Last updated: 2 November 2026</p>
+  <p>SEEK &amp; STRIKE has no accounts, no advertising trackers and no analytics. This page lists everything the game handles.</p>
+  <h2>On your device</h2>
+  <ul>
+    <li>Your progress, statistics, challenges, settings and callsign are stored on your phone only.</li>
+    <li>While a Daily Pass request is in progress, the game keeps a small record on the device so it never sends the same request twice.</li>
+  </ul>
+  <h2>Wallet and Daily Pass</h2>
+  <ul>
+    <li>Connecting a wallet gives the game your public wallet address. The game never sees your keys or seed phrase.</li>
+    <li>To read your pass, the game queries public Solana data through our RPC relay (a Cloudflare Worker that forwards read requests to an RPC provider). Requests contain public addresses only.</li>
+    <li>Transactions are prepared by the game and only take effect if you approve them in your wallet.</li>
+  </ul>
+  <h2>Online matches</h2>
+  <ul>
+    <li>To admit you to an online room the server receives your wallet address and a signature of a short text challenge (not a transaction), and checks your Daily Pass on chain.</li>
+    <li>During a match the server receives your callsign, class and game inputs. Match state lives in memory and is discarded when the room empties.</li>
+    <li>Your IP address is used by our hosting provider (Cloudflare) to deliver the service and to rate-limit abuse. We do not store it.</li>
+  </ul>
+  <h2>Weekly leaderboard</h2>
+  <p>For each week the server stores, per wallet: your callsign and your totals (score, takedowns, deaths, wins, rounds). The public board shows the callsign and a shortened wallet (e.g. 97g8…YbDD).</p>
+  <h2>Team voice chat</h2>
+  <p>The microphone is used only while you hold TALK, and only after you allow it in Android. Your voice is encoded on the phone and relayed in real time to your teammates in that room. The server does not decode, record or store audio.</p>
+  <h2>Sponsor slot</h2>
+  <p>The main menu shows one sponsor card loaded from scan.devfridge.cool. No personal data is sent with that request.</p>
+  <h2>Your choices</h2>
+  <ul>
+    <li>Uninstalling the game deletes everything stored on the device.</li>
+    <li>You can turn voice chat off in Settings, or revoke the microphone permission in Android.</li>
+    <li>Leaderboard rows are kept per week; to have yours removed, open an issue on <a href="https://github.com/mikeminer/seekandstrike/issues">GitHub</a>.</li>
+  </ul>
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="https://github.com/mikeminer/seekandstrike/issues">github.com/mikeminer/seekandstrike/issues</a>.</p>
+</div>
+
+<div data-lang-only="it">
+  <h1>Privacy</h1>
+  <p class="updated">Ultimo aggiornamento: 2 novembre 2026</p>
+  <p>SEEK &amp; STRIKE non ha account, tracciatori pubblicitari né analisi statistiche. Questa pagina elenca tutto ciò che il gioco gestisce.</p>
+  <h2>Sul tuo dispositivo</h2>
+  <ul>
+    <li>Progressi, statistiche, sfide, impostazioni e nome in partita restano solo sul tuo telefono.</li>
+    <li>Mentre una richiesta del Daily Pass è in corso, il gioco tiene un piccolo registro sul dispositivo per non inviare mai due volte la stessa richiesta.</li>
+  </ul>
+  <h2>Wallet e Daily Pass</h2>
+  <ul>
+    <li>Collegando un wallet il gioco riceve il tuo indirizzo pubblico. Non vede mai le tue chiavi né la frase di recupero.</li>
+    <li>Per leggere il pass il gioco interroga dati pubblici di Solana tramite il nostro relay RPC (un Cloudflare Worker che inoltra le letture a un fornitore RPC). Le richieste contengono solo indirizzi pubblici.</li>
+    <li>Le transazioni vengono preparate dal gioco e hanno effetto solo se le approvi nel tuo wallet.</li>
+  </ul>
+  <h2>Partite online</h2>
+  <ul>
+    <li>Per farti entrare in una stanza il server riceve il tuo indirizzo e la firma di un breve testo di verifica (non una transazione), e controlla il Daily Pass sulla blockchain.</li>
+    <li>Durante la partita il server riceve nome in partita, classe e comandi di gioco. Lo stato della partita resta in memoria e viene eliminato quando la stanza si svuota.</li>
+    <li>Il tuo indirizzo IP è usato dal nostro fornitore di hosting (Cloudflare) per erogare il servizio e limitare gli abusi. Noi non lo conserviamo.</li>
+  </ul>
+  <h2>Classifica settimanale</h2>
+  <p>Per ogni settimana il server conserva, per wallet: il nome in partita e i totali (punteggio, abbattimenti, morti, vittorie, round). La classifica pubblica mostra il nome e un indirizzo abbreviato (es. 97g8…YbDD).</p>
+  <h2>Voce di squadra</h2>
+  <p>Il microfono si usa solo mentre tieni premuto PARLA, e solo dopo che lo hai consentito in Android. La voce viene codificata sul telefono e inoltrata in tempo reale ai compagni di squadra nella stanza. Il server non la decodifica, non la registra e non la conserva.</p>
+  <h2>Spazio sponsor</h2>
+  <p>Il menu principale mostra una scheda sponsor caricata da scan.devfridge.cool. Con quella richiesta non viene inviato alcun dato personale.</p>
+  <h2>Le tue scelte</h2>
+  <ul>
+    <li>Disinstallando il gioco si cancella tutto ciò che è salvato sul dispositivo.</li>
+    <li>Puoi spegnere la voce nelle Impostazioni o revocare il permesso del microfono in Android.</li>
+    <li>Le righe della classifica sono tenute per settimana; per far rimuovere la tua, apri una segnalazione su <a href="https://github.com/mikeminer/seekandstrike/issues">GitHub</a>.</li>
+  </ul>
+  <h2>Contatti</h2>
+  <p>Domande su questa informativa: <a href="https://github.com/mikeminer/seekandstrike/issues">github.com/mikeminer/seekandstrike/issues</a>.</p>
+</div>
+</main>
+<footer><div class="wrap"><span>© 2026 SEEK &amp; STRIKE</span><nav><a href="/">Home</a><a href="/terms">Terms / Termini</a></nav></div></footer>
+</body>
+</html>
