@@ -1,0 +1,15 @@
+{
+ "format": "seek-strike-ground-ao",
+ "version": 1,
+ "map": "magazzini-sale",
+ "size": 512,
+ "bounds": {
+  "minX": -32,
+  "maxX": 32,
+  "minZ": -32,
+  "maxZ": 32
+ },
+ "samples": 24,
+ "maxDistance": 24,
+ "collidersSha256": "027277948a295fdc57bc2e57d8a78ca986288a89283358b1679f71770b72551e"
+}

@@ -1,0 +1,15 @@
+{
+ "format": "seek-strike-ground-ao",
+ "version": 1,
+ "map": "scalo-ferroviario",
+ "size": 512,
+ "bounds": {
+  "minX": -26,
+  "maxX": 26,
+  "minZ": -42,
+  "maxZ": 42
+ },
+ "samples": 24,
+ "maxDistance": 24,
+ "collidersSha256": "bb831ebe89d0f33764593e8a3c7c3aa27f0a317e3234a01bf2beaddba740b2e7"
+}

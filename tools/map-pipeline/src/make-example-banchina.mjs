@@ -11,16 +11,17 @@ const SRC = process.env.MAP_SRC ?? [new URL('../../../shared/src/map/portoArdesi
 const OUT = process.argv[2] ?? 'out/banchina-est.glb';
 const bundled = await build({ entryPoints: [SRC], bundle: true, write: false, format: 'esm', platform: 'node' });
 mkdirSync('out', { recursive: true });
-const tmp = '/tmp/_map_src.mjs';
+const tmp = new URL('../out/_map_src.mjs', import.meta.url);
 writeFileSync(tmp, bundled.outputFiles[0].text);
-const mod = await import(tmp + '?t=' + Date.now());
+const mod = await import(tmp.href + '?t=' + Date.now());
 const def = Object.values(mod).find((v) => v && Array.isArray(v.boxes));
+const ENV = def.environment ?? { sun: { azimuthDeg: 110, elevationDeg: 14 }, fog: { color: '#b9c4cc', near: 60, far: 220 }, timeOfDay: 'dawn' };
 
 const b = def.bounds;
-const w = new MapWriter('Banchina_Est', {
+const w = new MapWriter(def.id, {
   id: def.id, nameKey: def.nameKey, bounds: b, waterLevel: def.waterLevel,
-  environment: { sun: { azimuthDeg: 110, elevationDeg: 14 }, fog: { color: '#b9c4cc', near: 60, far: 220 }, timeOfDay: 'dawn' },
-  source: 'portoArdesia.ts (stage 1)',
+  environment: ENV,
+  source: SRC.split(/[\/]/).pop(),
 });
 
 // Ground slab (quay apron) and the sea beyond the east kerb.
@@ -35,7 +36,9 @@ w.mesh('water_sea', boxGeometry(80, 0.02, gz + 40, 8), 'water', {
 
 const lookToMat = (l) => l; // palette keys match BoxLook names
 def.boxes.forEach((box, i) => {
-  w.mesh(`blk_${box.look}_${String(i).padStart(2, '0')}`, boxGeometry(box.s.x, box.s.y, box.s.z), lookToMat(box.look), {
+  // Buildings become `bld_…` nodes with a plaster/brick material: the client compiles them into procedural architecture.
+  const node = box.building ? `bld_${String(i).padStart(3, '0')}_${box.building}` : `blk_${box.look}_${String(i).padStart(2, '0')}`;
+  w.mesh(node, boxGeometry(box.s.x, box.s.y, box.s.z), box.building ?? lookToMat(box.look), {
     translation: [box.c.x, box.c.y, box.c.z],
     extras: { collider: 'box', static: true, material: box.material, look: box.look,
       ...(box.shell !== undefined ? { shell: box.shell } : {}), ...(box.fill !== undefined ? { fill: box.fill } : {}) },
@@ -52,8 +55,6 @@ w.empty('objective_charge_console', {
   translation: [def.objective.x, def.objective.y, def.objective.z],
   extras: { marker: 'objective', tags: ['plant', 'defuse'], props: { kind: 'plant', radius: 1.6, fuseSeconds: 30 } },
 });
-w.empty('trigger_bunker_room', { translation: [0, 1.6, -22], scale: [11.4, 3.2, 8.6],
-  extras: { marker: 'trigger', tags: ['zone'], props: { zone: 'bunker' } } });
 def.waypoints.forEach((p, i) => w.empty(`nav_${String(i).padStart(2, '0')}`, {
   translation: [p.x, 0, p.z],
   extras: { marker: 'waypoint', props: { patrols: def.patrols.map((loop, li) => (loop.includes(i) ? li : -1)).filter((x) => x >= 0) } },

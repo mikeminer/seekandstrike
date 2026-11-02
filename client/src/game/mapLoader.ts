@@ -9,6 +9,8 @@ import type { MapDef } from '@shared/map/types';
 /** Maps bundled under public/assets/maps/<id>/ by tools/map-pipeline. */
 export const MAPS = {
   'banchina-est': { nameKey: 'map.portoArdesia', online: true, architecture: true, attribution: null },
+  'magazzini-sale': { nameKey: 'map.magazzini', online: false, architecture: true, attribution: null },
+  'scalo-ferroviario': { nameKey: 'map.scalo', online: false, architecture: true, attribution: null },
   'porto-vecchio': { nameKey: 'map.portoVecchio', online: false, architecture: true, attribution: '© OpenStreetMap contributors (ODbL)' },
 } as const;
 export type MapId = keyof typeof MAPS;

@@ -18,6 +18,8 @@ export interface MapBox {
    * rifle rounds stop in them; empty shells (wood crates) only cost the two walls.
    */
   fill?: number;
+  /** A building mass: the renderer replaces the box with procedural architecture (pipeline node `bld_…`). */
+  building?: 'plaster' | 'brick';
 }
 
 export interface MapDef {
@@ -40,4 +42,6 @@ export interface MapDef {
   groundSlabs?: MapBox[] | undefined;
   /** Baked nav grid from the map pipeline; bots fall back to `waypoints` when absent. */
   navGrid?: NavGrid | undefined;
+  /** Authored lighting (written into the pipeline markers). */
+  environment?: { sun: { azimuthDeg: number; elevationDeg: number } } | undefined;
 }
