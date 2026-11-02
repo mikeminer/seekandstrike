@@ -5,7 +5,7 @@ import type { MapDef } from '@shared/map/types';
 import { raycastStatic } from '@shared/map/query';
 import { HEALTH, WaveClock } from '@shared/sim/health';
 import { spawnProjectile, stepProjectile, type ProjectileImpact, type SurfaceMaterial } from '@shared/sim/ballistics';
-import { RIFLE_R30 } from '@shared/sim/weapons';
+import { RIFLE_R30, approachAds } from '@shared/sim/weapons';
 import type { Grenade } from '@shared/sim/grenade';
 import { type Vec3, v3 } from '@shared/sim/vec';
 import type { GrenadePose, Pose } from './snapshots';
@@ -184,7 +184,7 @@ export class Mirror {
     const me = this.self;
     const w = me.weapon;
     const target = aim && !sprinting && w.phase !== 'reloading' ? 1 : 0;
-    w.ads = Math.max(0, Math.min(1, w.ads + (target > w.ads ? 1 : -1) * dt / w.spec.adsSeconds));
+    w.ads = approachAds(w.ads, target, dt / w.spec.adsSeconds);
     if (w.phase === 'reloading') { w.reloadTimer -= dt; if (w.reloadTimer <= 0) { w.phase = 'ready'; w.reloadTimer = 0; } }
     me.move.sprinting = sprinting;
     me.kickPitch = me.kickPitch > 0 ? Math.max(0, me.kickPitch - w.spec.recoilRecovery * dt * (1 + me.kickPitch * 8)) : 0;

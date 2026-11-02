@@ -5,11 +5,13 @@ import type { PlayerClass } from '@shared/sim/etClasses';
 import type { RpcEnv } from '../rpc/handler';
 import { PROOF_TTL_MS } from '@shared/passProof';
 import { RoomSim } from './roomSim';
-import { ROOM_MAP } from './map';
+import { ONLINE_MAP_IDS, roomMap, type OnlineMapId } from './map';
+import type { Leaderboard } from '../leaderboard/leaderboard';
 import { AccessGate, PassRegistry, RpcPassVerifier, passRpcFromUrl, type PendingAuth } from './access';
 
 export interface Env extends RpcEnv {
   MATCH_ROOM: DurableObjectNamespace<MatchRoom>;
+  LEADERBOARD: DurableObjectNamespace<Leaderboard>;
   /**
    * Online access policy. Anything but the literal "false" requires a Daily Pass proven to the server: the wallet signs
    * a challenge and the server reads the chain through RPC_UPSTREAM_URL (see access.ts). With no usable RPC configured
@@ -48,6 +50,8 @@ export class MatchRoom extends DurableObject<Env> {
   private rate = new WeakMap<WebSocket, { windowStart: number; n: number }>();
   private readonly passes = new PassRegistry();
   private gate: AccessGate | null = null;
+  /** Map of this room, from the Worker's x-ss-map header (room name). */
+  private mapId: OnlineMapId = 'banchina-est';
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -57,6 +61,8 @@ export class MatchRoom extends DurableObject<Env> {
   }
 
   override async fetch(request: Request): Promise<Response> {
+    const asked = request.headers.get('x-ss-map');
+    if (!this.room && asked && (ONLINE_MAP_IDS as readonly string[]).includes(asked)) this.mapId = asked as OnlineMapId;
     if (this.ctx.getWebSockets().length >= MAX_PLAYERS_PER_ROOM) return new Response('Room full', { status: 409 });
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
@@ -147,7 +153,7 @@ export class MatchRoom extends DurableObject<Env> {
 
   /** Takes (or resumes) a seat for an admitted socket and sends the welcome. */
   private seat(ws: WebSocket, att: Attachment, name: string | undefined, cls: number | undefined, resumeToken: string | undefined, proof: { wallet: string; expiresAt: number } | null): void {
-    const room = this.room ?? (this.room = new RoomSim({ map: ROOM_MAP, seed: (Date.now() ^ 0x5eec) >>> 0, now: () => Date.now(), token: newToken }));
+    const room = this.room ?? (this.room = new RoomSim({ map: roomMap(this.mapId), seed: (Date.now() ^ 0x5eec) >>> 0, now: () => Date.now(), token: newToken }));
     const r = room.join(name ?? '', (cls ?? 0) as PlayerClass, resumeToken);
     if (!r.ok) return this.fail(ws, r.error, true);
     if (proof) this.passes.grant(r.seat.id, r.seat.token, proof.wallet, proof.expiresAt);
@@ -158,7 +164,7 @@ export class MatchRoom extends DurableObject<Env> {
     ws.serializeAttachment({ seat: r.seat.id, ...(att.ip !== undefined ? { ip: att.ip } : {}) } satisfies Attachment);
     this.send(ws, {
       t: 'welcome', v: PROTOCOL_VERSION, roomId: this.ctx.id.toString(), serverTickHz: SERVER_TICK_HZ, snapshotHz: SERVER_SNAPSHOT_HZ,
-      playerId: r.seat.id, team: r.team, cls: r.seat.cls, resumeToken: r.seat.token, mapId: ROOM_MAP.id,
+      playerId: r.seat.id, team: r.team, cls: r.seat.cls, resumeToken: r.seat.token, mapId: this.mapId,
     });
     this.ensureLoop();
   }
@@ -197,6 +203,20 @@ export class MatchRoom extends DurableObject<Env> {
     this.roundEndSent = false;
   }
 
+  /** Weekly leaderboard: the finished round's verified players (Daily Pass wallets) with server-side stats. */
+  private submitRound(room: RoomSim, winner: 0 | 1): void {
+    const entries = [];
+    for (const seat of room.seats.values()) {
+      const wallet = this.passes.walletOf(seat.id);
+      const c = room.match.combatants[seat.id];
+      if (!wallet || !c) continue;
+      entries.push({ wallet, name: seat.name, kills: c.kills, deaths: c.deaths, won: c.team === winner, map: this.mapId });
+    }
+    if (!entries.length || !this.env.LEADERBOARD) return;
+    const stub = this.env.LEADERBOARD.get(this.env.LEADERBOARD.idFromName('global'));
+    this.ctx.waitUntil(stub.fetch('https://leaderboard/submit', { method: 'POST', body: JSON.stringify({ entries }) }).then(() => undefined, () => undefined));
+  }
+
   private onTick(): void {
     const room = this.room;
     if (!room) return this.stopLoop();
@@ -226,6 +246,7 @@ export class MatchRoom extends DurableObject<Env> {
       this.roundEndSent = true;
       const end: ServerMessage = { t: 'roundEnd', winner: room.roundWinner ?? 1, restartInMs: Math.max(0, room.roundEndsAt - now) };
       for (const ws of this.sockets.values()) this.send(ws, end);
+      this.submitRound(room, end.winner);
     }
     // Snapshots follow wall-clock time (timers jitter, so counting ticks would undershoot the rate).
     if (now - this.lastSnap >= 1000 / SERVER_SNAPSHOT_HZ - 8) {

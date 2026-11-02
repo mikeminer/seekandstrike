@@ -187,6 +187,8 @@ export class PassRegistry {
     this.bySeat.delete(seat);
     if (this.byWallet.get(g.wallet) === seat) this.byWallet.delete(g.wallet);
   }
+  /** Verified wallet of a seat (null for seats admitted without a pass, e.g. local tests). */
+  walletOf(seat: number): string | null { return this.bySeat.get(seat)?.wallet ?? null; }
   clear(): void { this.bySeat.clear(); this.byWallet.clear(); }
   get size(): number { return this.bySeat.size; }
 }

@@ -1,7 +1,7 @@
 /**
  * Game languages: the 17 UI languages of the Solana Mobile dApp Store app on the Seeker
  * (read from com.solanamobile.dappstore v1.59.0 resources on 2026-11-02: en + ar de es fr hi it ja ko nl pl pt ru th uk zh zh-TW).
- * Choice order: ?lang= → saved choice → device languages → English.
+ * Choice order: ?lang= → saved choice (Settings) → English (owner decision: English by default).
  */
 export const LANGS = ['en', 'it', 'ar', 'de', 'es', 'fr', 'hi', 'ja', 'ko', 'nl', 'pl', 'pt', 'ru', 'th', 'uk', 'zh', 'zh-TW'] as const;
 export type Lang = (typeof LANGS)[number];
@@ -38,10 +38,7 @@ export function detectLang(): Lang {
     if (q && isLang(q)) return q;
   }
   try { const s = localStorage.getItem(KEY); if (isLang(s)) return s; } catch { /* storage unavailable */ }
-  if (typeof navigator !== 'undefined') {
-    // The device language first: on the Seeker WebView navigator.languages can start with en-US even when the phone is in Italian.
-    for (const tag of [navigator.language, ...(navigator.languages ?? [])]) { const l = tag ? matchLang(tag) : null; if (l) return l; }
-  }
+  // Owner decision 2026-11-02: English by default, whatever the device language; players pick another in Settings.
   return 'en';
 }
 

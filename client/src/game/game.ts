@@ -546,7 +546,8 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     }
 
     // Touch aim assist: look slows down while the crosshair is over a visible enemy (never moves the aim by itself).
-    this.assist = 1;
+    // Eased in and out (~80 ms) instead of switching 1 ↔ 0.55, which felt like the sight jumping.
+    let assistTarget = 1;
     if (this.touch && this.sens.assist && p.health.state === 'alive') {
       const fx = -Math.sin(p.yaw) * Math.cos(p.pitch), fy = Math.sin(p.pitch), fz = -Math.cos(p.yaw) * Math.cos(p.pitch);
       const ex = p.pos.x, ey = p.pos.y + eyeHeight(p), ez = p.pos.z;
@@ -558,9 +559,10 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
         const cos = (tx * fx + ty * fy + tz * fz) / dist;
         const ang = Math.acos(Math.min(1, cos));
         const radius = cone + Math.atan(0.45 / dist); // body half-width
-        if (ang < radius) { this.assist = 0.55; break; }
+        if (ang < radius) { assistTarget = 0.55; break; }
       }
     }
+    this.assist += (assistTarget - this.assist) * Math.min(1, dt * 12);
   }
 
   /** One small mesh per live grenade, created and removed as the sim spawns/explodes them. */

@@ -15,7 +15,14 @@ const hex = (c: number): string => `#${c.toString(16).padStart(6, '0')}`;
 
 export interface MetaMenu { refresh(): void; showTab(t: 'play' | 'profile' | 'settings'): void }
 
-export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSettings(s: Settings): void; onReplayTutorial(): void }): MetaMenu {
+/** Server answer of GET /leaderboard (names and short wallets only). */
+export interface LeaderboardData {
+  week: string; players: number;
+  top: { rank: number; name: string; wallet: string; score: number; kills: number; deaths: number; wins: number; rounds: number }[];
+  me: LeaderboardData['top'][number] | null;
+}
+
+export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSettings(s: Settings): void; onReplayTutorial(): void; leaderboard?: () => Promise<LeaderboardData | null> }): MetaMenu {
   const logo = card.querySelector('.logo');
   const header = document.createElement('div');
   header.className = 'meta-head';
@@ -41,6 +48,7 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
   tabs.addEventListener('click', (e) => {
     const t = (e.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.tab;
     if (t === 'play' || t === 'profile' || t === 'settings') showTab(t);
+    if (t === 'profile') void loadBoard();
   });
 
   const lang = locale();
@@ -70,7 +78,27 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
         <div><b>${s.matches}</b>${m('st.matches')}</div><div><b>${s.wins}</b>${m('st.wins')}</div><div><b>${kd}</b>${m('st.kd')}</div>
         <div><b>${acc}</b>${m('st.acc')}</div><div><b>${s.headshots}</b>${m('st.head')}</div><div><b>${s.bestStreak}</b>${m('st.streak')}</div>
         <div><b>${mins} min</b>${m('st.time')}</div></div>
-      <h3>${m('un.title')}</h3><p>${next ? esc(m('un.next', { n: next.level, name: m(`unlock.${next.id}` as never) })) : m('un.all')}</p>`;
+      <h3>${m('un.title')}</h3><p>${next ? esc(m('un.next', { n: next.level, name: m(`unlock.${next.id}` as never) })) : m('un.all')}</p>
+      <h3>${m('lb.title')}</h3><div class="lb" data-lb>…</div>`;
+    if (lastBoard !== undefined) paintBoard(lastBoard);
+  };
+
+  // Weekly online leaderboard (server data; names are escaped, wallets are short forms).
+  let lastBoard: LeaderboardData | null | 'error' | undefined;
+  const paintBoard = (b: LeaderboardData | null | 'error'): void => {
+    const el = prof.querySelector<HTMLElement>('[data-lb]');
+    if (!el) return;
+    if (b === 'error' || b === null) { el.innerHTML = `<p>${m('lb.error')}</p>`; return; }
+    if (!b.top.length) { el.innerHTML = `<p>${m('lb.empty')}</p>`; return; }
+    const row = (r: LeaderboardData['top'][number], me = false): string =>
+      `<div class="lb-r${me ? ' me' : ''}"><b>${r.rank}</b><span>${esc(r.name)}<small>${esc(r.wallet)}</small></span><em>${r.score} ${m('lb.pts')}</em></div>`;
+    const mine = b.me && !b.top.some((r) => r.wallet === b.me!.wallet) ? `<div class="lb-gap">…</div>${row(b.me, true)}` : '';
+    el.innerHTML = b.top.slice(0, 20).map((r) => row(r, !!b.me && r.wallet === b.me.wallet)).join('') + mine;
+  };
+  const loadBoard = async (): Promise<void> => {
+    if (!hooks.leaderboard) return;
+    try { lastBoard = await hooks.leaderboard(); } catch { lastBoard = 'error'; }
+    paintBoard(lastBoard ?? null);
   };
 
   const renderSettings = (): void => {
@@ -88,6 +116,7 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
       <label class="row">${m('set.diff')} <select data-set="difficulty">${(['recruit', 'regular', 'veteran'] as const).map((d) => `<option value="${d}"${d === st.difficulty ? ' selected' : ''}>${m(`set.diff.${d}`)}</option>`).join('')}</select></label>
       <div class="row col">${m('set.finish')}<div class="sws">${opts('finish', st.finish)}</div></div>
       <div class="row col">${m('set.dot')}<div class="sws">${opts('dot', st.dot)}</div></div>
+      <label class="row">${m('set.callsign')} <input type="text" maxlength="16" data-callsign value="${esc(st.callsign)}" autocomplete="off" spellcheck="false"></label>
       <label class="row">${m('set.lang')} <select data-lang>${LANGS.map((l) => `<option value="${l}"${l === lang ? ' selected' : ''}>${NATIVE_NAMES[l]}</option>`).join('')}</select></label>
       <button type="button" class="ghost" data-tut>${m('set.tutorial')}</button>`;
   };
@@ -96,6 +125,11 @@ export function mountMetaMenu(card: HTMLElement, profile: Profile, hooks: { onSe
   sett.addEventListener('change', (e) => {
     const el = e.target as HTMLSelectElement;
     if (el.dataset.lang !== undefined && isLang(el.value) && el.value !== lang) chooseLang(el.value);
+    if (el.dataset.callsign !== undefined) {
+      const v = el.value.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 16);
+      if (v) { profile.settings.callsign = v; commit(); }
+      el.value = profile.settings.callsign;
+    }
   });
   sett.addEventListener('input', (e) => {
     const el = e.target as HTMLInputElement;

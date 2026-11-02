@@ -70,3 +70,15 @@ describe('server snapshot flags', () => {
     expect('ad' in me).toBe(false);
   });
 });
+
+describe('mirror: own aim-down-sights blend (online)', () => {
+  it('reaches 1 and holds it frame after frame while aiming (regression: it flickered 1 ↔ 0.9x online)', () => {
+    const mir = new Mirror(PORTO_ARDESIA, 0);
+    mir.applyState(snap([player(0), player(1)]));
+    const seen: number[] = [];
+    for (let i = 0; i < 300; i++) { mir.tickLocal(1 / 90, true, false); seen.push(mir.match.combatants[0]!.weapon.ads); }
+    expect(seen.slice(40).every((a) => a === 1)).toBe(true);
+    for (let i = 0; i < 300; i++) mir.tickLocal(1 / 90, false, false);
+    expect(mir.match.combatants[0]!.weapon.ads).toBe(0);
+  });
+});

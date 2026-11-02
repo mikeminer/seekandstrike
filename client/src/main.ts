@@ -12,7 +12,7 @@ import { mountSponsorCard } from './sponsor/card';
 import type { PlayerClass } from '@shared/sim/etClasses';
 import { loadProfile, saveProfile, freeMatchAvailable, useFreeMatch } from './meta/profileStore';
 import { applyMatch } from './meta/progression';
-import { mountMetaMenu } from './meta/menuPanels';
+import { mountMetaMenu, type LeaderboardData } from './meta/menuPanels';
 import { summaryHtml } from './meta/summary';
 import { Tutorial } from './meta/tutorial';
 import { m as mt } from './meta/strings';
@@ -46,8 +46,9 @@ function passActive(): boolean {
 const onlineCandidate: string | null = ONLINE.wsUrl ?? (__DEV_PASS_BYPASS__ ? params.get('online') : null);
 const onlineBase = onlineCandidate && /^wss?:\/\/[\w.-]+(:\d+)?$/.test(onlineCandidate) ? onlineCandidate : null;
 const roomParam = params.get('room') ?? '';
-const onlineRoom = /^[a-z0-9-]{4,32}$/.test(roomParam) ? roomParam : ONLINE.defaultRoom;
-const onlineName = (params.get('name') ?? '').replace(/[^\p{L}\p{N} _.-]/gu, '').slice(0, 16) || `Player${Math.floor(Math.random() * 900 + 100)}`;
+const onlineRoom = /^[a-z0-9-]{4,32}$/.test(roomParam) ? roomParam : undefined;
+/** Online name: ?name= (dev), else the callsign saved in Settings (a random one is created and saved once). */
+const cleanCallsign = (s: string): string => s.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 16);
 
 /** Chosen class (remembered between visits; a failure to read it falls back to Soldier). */
 const CLASS_KEY = 'seekstrike.class';
@@ -123,20 +124,43 @@ const freeEl = menu.querySelector<HTMLElement>('[data-free]')!;
 /** True while the current match is the free one of the day (no pass). */
 let freeRun = false;
 const canPlay = (): boolean => passActive() || freeMatchAvailable(profile);
+if (!profile.settings.callsign) { profile.settings.callsign = `Soldier${Math.floor(Math.random() * 9000 + 1000)}`; saveProfile(profile); }
+/** Weekly online leaderboard from the game server (null when online is not configured). */
+const lbBase = onlineBase ? onlineBase.replace(/^ws/, 'http') : null;
+async function fetchLeaderboard(): Promise<LeaderboardData | null> {
+  if (!lbBase) return null;
+  const wallet = (await passApp).flow.wallet;
+  const r = await fetch(`${lbBase}/leaderboard${wallet ? `?wallet=${wallet}` : ''}`, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`leaderboard ${r.status}`);
+  return (await r.json()) as LeaderboardData;
+}
 const metaMenu = mountMetaMenu(menu.querySelector<HTMLElement>('.card')!, profile, {
   onSettings: (st) => game.applySettings(st),
   onReplayTutorial: () => { /* profile.tutorialDone is now false: the next match shows it */ },
+  leaderboard: () => fetchLeaderboard(),
 });
 
 let loaded = false;
 const gateEl = menu.querySelector<HTMLElement>('.gate');
 const onlineBtn = menu.querySelector<HTMLButtonElement>('[data-online]');
+/**
+ * Online play is offered only on maps the server says it runs (GET /health → maps). A server without that list
+ * (deployed before multi-map rooms) runs Banchina Est only, so only that map stays online there.
+ */
+let onlineMapOk = false;
+if (onlineBase) {
+  fetch(`${onlineBase.replace(/^ws/, 'http')}/health`, { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((h: { maps?: unknown } | null) => { onlineMapOk = Array.isArray(h?.maps) ? h.maps.includes(chosenMap) : chosenMap === 'banchina-est'; })
+    .catch(() => { onlineMapOk = chosenMap === 'banchina-est'; })
+    .finally(() => syncPlay());
+}
 const syncPlay = (): void => {
   const pass = passActive();
   const free = !pass && freeMatchAvailable(profile);
   playBtn.disabled = !(loaded && canPlay());
   playBtn.textContent = free ? mt('free.play') : t('menu.play');
-  if (onlineBtn) onlineBtn.disabled = !(loaded && pass);
+  if (onlineBtn) onlineBtn.disabled = !(loaded && pass && onlineMapOk);
   if (gateEl) gateEl.hidden = pass;
   freeEl.hidden = pass;
   freeEl.textContent = free ? mt('free.available') : mt('free.used');
@@ -206,7 +230,8 @@ onlineBtn?.addEventListener('click', async () => {
       return r.ok ? btoa(String.fromCharCode(...r.signature)) : null;
     };
     // Quick match: the requested room first, then lobby-1..lobby-N until one has a free seat.
-    const rooms = quickMatchRooms(onlineRoom, ONLINE.quickMatchRooms);
+    const rooms = quickMatchRooms(chosenMap, ONLINE.quickMatchRooms, onlineRoom);
+    const onlineName = cleanCallsign(params.get('name') ?? '') || profile.settings.callsign;
     let joined = false;
     for (const room of rooms) {
       try {

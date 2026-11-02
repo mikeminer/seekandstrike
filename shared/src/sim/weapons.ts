@@ -124,6 +124,17 @@ export function currentSpread(w: WeaponState, ctx: ShotContext): number {
   return Math.min(s.spreadMax, (base + moving + w.bloom) * STANCE_STABILITY[ctx.stance]);
 }
 
+/**
+ * Moves the aim-down-sights blend towards `target` by at most `step` and HOLDS it there. The ONE place this is
+ * computed (offline sim and the online mirror): `target > ads ? up : down` lowered a fully aimed weapon every other
+ * step, and the sight jumped between two poses (fixed offline on 2026-11-02, then found again in the online mirror).
+ */
+export function approachAds(ads: number, target: number, step: number): number {
+  if (target > ads) return Math.min(target, ads + step);
+  if (target < ads) return Math.max(target, ads - step);
+  return ads;
+}
+
 /** Advance timers; `aim` drives the ADS blend. Completes reloads. */
 export function tickWeapon(w: WeaponState, dt: number, aim: boolean): void {
   if (w.cooldown > 0) w.cooldown = Math.max(0, w.cooldown - dt);
@@ -131,8 +142,7 @@ export function tickWeapon(w: WeaponState, dt: number, aim: boolean): void {
   const rate = dt / w.spec.adsSeconds;
   // Move towards the target and HOLD it once reached. (The old `target > ads ? up : down` lowered a fully aimed
   // weapon every other tick: ads flickered 1 ↔ 0.924 and the sight jumped between two poses.)
-  if (adsTarget > w.ads) w.ads = Math.min(adsTarget, w.ads + rate);
-  else if (adsTarget < w.ads) w.ads = Math.max(adsTarget, w.ads - rate);
+  w.ads = approachAds(w.ads, adsTarget, rate);
   w.bloom = Math.max(0, w.bloom - w.spec.spreadRecovery * dt);
   if (w.phase === 'reloading') {
     w.reloadTimer -= dt;

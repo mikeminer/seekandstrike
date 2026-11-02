@@ -3,7 +3,7 @@
 // Never touches a deployed Worker: refuses any host but localhost.
 const BASE = process.env.ROOM_URL ?? 'ws://localhost:8787';
 if (!/^wss?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) { console.error('Refusing to run against', BASE); process.exit(2); }
-const ROOM = `smoke-${Date.now().toString(36)}`;
+const ROOM = `${process.env.SMOKE_MAP ? process.env.SMOKE_MAP + "-" : "smoke-"}${Date.now().toString(36)}`;
 const SECONDS = Number(process.env.SMOKE_SECONDS ?? 20);
 
 const open = (name, cls) => new Promise((resolve, reject) => {

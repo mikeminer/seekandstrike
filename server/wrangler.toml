@@ -10,9 +10,18 @@ workers_dev = true
 name = "MATCH_ROOM"
 class_name = "MatchRoom"
 
+[[durable_objects.bindings]]
+name = "LEADERBOARD"
+class_name = "Leaderboard"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["MatchRoom"]
+
+# Weekly online leaderboard (one global object, SQLite).
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Leaderboard"]
 
 # Daily Pass RPC proxy (POST /rpc). The upstream URL is a SECRET, never committed:
 #   wrangler secret put RPC_UPSTREAM_URL      (owner only, at deploy time)

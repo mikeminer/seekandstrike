@@ -42,7 +42,7 @@ it('owner purchase rehearsal (read-only)', async () => {
   console.log('WALLET', WALLET, 'balance', sol(await getBalance(rpc, WALLET)), 'SOL', 'pass state:', flow.view.step);
   const now = Math.floor(Date.now() / 1000);
   console.log('STATUS', JSON.stringify(flow.status, (_k, x) => (typeof x === 'bigint' ? x.toString() : x)).slice(0, 600));
-  for (const l of flow.snapshot?.locks ?? []) console.log('LOCK', l.address, 'mint', (l as { mint?: string }).mint ?? '?', 'id', String(l.lockId), 'amount', String(l.amount), 'unlockAt', new Date(Number(l.unlockAt) * 1000).toISOString(), Number(l.unlockAt) > now ? 'OPEN' : 'ended');
+  for (const l of flow.snapshot?.locks ?? []) console.log('LOCK', l.address, 'mint', String((l as unknown as { mint?: unknown }).mint ?? '?'), 'id', String(l.lockId), 'amount', String(l.amount), 'unlockAt', new Date(Number(l.unlockAt) * 1000).toISOString(), Number(l.unlockAt) > now ? 'OPEN' : 'ended');
   await flow.startPurchase();
   const v = flow.view;
   if (v.step === 'insufficient') {

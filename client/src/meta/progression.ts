@@ -146,12 +146,14 @@ export interface Settings {
   lookSens: number; // 0.5..2 multiplier
   aimSens: number; // 0.5..2 multiplier on the aimed scale
   aimAssist: boolean;
+  /** Name shown online and in the leaderboard (letters, digits, space _ . -, 1-16). */
+  callsign: string;
   volume: number; // 0..1
   difficulty: 'recruit' | 'regular' | 'veteran';
   finish: string;
   dot: string;
 }
-export const defaultSettings = (): Settings => ({ lookSens: 1, aimSens: 1, aimAssist: true, volume: 0.8, difficulty: 'regular', finish: 'finish.std', dot: 'dot.red' });
+export const defaultSettings = (): Settings => ({ lookSens: 1, aimSens: 1, aimAssist: true, callsign: '', volume: 0.8, difficulty: 'regular', finish: 'finish.std', dot: 'dot.red' });
 
 export interface Profile {
   v: 1;
@@ -246,6 +248,7 @@ export function parseProfile(raw: unknown, now: Date): Profile {
     lookSens: clampN(st.lookSens, 0.5, 2, 1),
     aimSens: clampN(st.aimSens, 0.5, 2, 1),
     aimAssist: st.aimAssist !== false,
+    callsign: typeof st.callsign === 'string' ? st.callsign.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 16) : '',
     volume: clampN(st.volume, 0, 1, 0.8),
     difficulty: st.difficulty === 'recruit' || st.difficulty === 'veteran' ? st.difficulty : 'regular',
     finish: typeof st.finish === 'string' && UNLOCKS.some((u) => u.id === st.finish && u.kind === 'finish') ? st.finish : 'finish.std',
