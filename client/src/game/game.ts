@@ -26,7 +26,7 @@ import { RagdollSystem } from '../render/ragdoll';
 import { SoldierFactory, type SoldierView } from '../render/soldier';
 import { Viewmodel } from '../render/viewmodel';
 import { Effects } from '../render/effects';
-import { InputManager, LOOK } from '../input/input';
+import { InputManager, LOOK, WORLD_FOV } from '../input/input';
 import { TouchControls } from '../input/touch';
 import { Hud } from '../ui/hud';
 import { t } from '../ui/i18n';
@@ -460,7 +460,7 @@ online rtt ${Math.round(this.online.rtt)} ms corr ${this.online.predictor.stats.
     const sh = this.camShake * 0.02;
     this.camera.position.set(pp.x + (Math.random() - 0.5) * sh, pp.y + this.eyeY + (Math.random() - 0.5) * sh, pp.z);
     this.camera.rotation.set(p.pitch + p.kickPitch, p.yaw + p.kickYaw, p.health.state === 'downed' ? 0.25 : 0, 'YXZ');
-    this.camera.fov = 75 - p.weapon.ads * 17;
+    this.camera.fov = WORLD_FOV.hip - p.weapon.ads * (WORLD_FOV.hip - WORLD_FOV.ads);
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
 

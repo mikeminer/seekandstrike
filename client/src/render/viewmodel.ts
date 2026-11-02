@@ -201,11 +201,12 @@ export class Viewmodel {
     const smooth = 1 - Math.exp(-dt * 25);
     this.lookX += (lookDX - this.lookX) * smooth;
     this.lookY += (lookDY - this.lookY) * smooth;
-    const steady = 1 - ads * 0.92;
+    // Fully aimed: no look sway at all, so the red dot stays on the screen centre where the shots go.
+    const steady = 1 - ads;
     this.swayX = this.lagX.step(dt, Math.max(-1.5, Math.min(1.5, -this.lookX * 0.6))) * steady;
     this.swayY = this.lagY.step(dt, Math.max(-1.5, Math.min(1.5, this.lookY * 0.6))) * steady;
     this.bob += dt * c.speed * 2.1;
-    const bobAmp = (c.move.grounded ? 1 : 0) * Math.min(1, c.speed / 4) * (1 - ads * 0.85);
+    const bobAmp = (c.move.grounded ? 1 : 0) * Math.min(1, c.speed / 4) * (1 - ads);
     if (w.shotsFired !== this.lastShots) {
       const k = 1 - ads * 0.5;
       this.recZ.kick(1.1 * k);
@@ -256,7 +257,7 @@ export class Viewmodel {
     );
     this.rig.rotation.set(
       kickPitch * 0.05 + this.climb * 0.03 + tilt * 0.1 + sprint * -0.35,
-      sprint * 0.6 + this.swayX * 0.05 + kickYaw * 0.03 + tilt * 0.55,
+      sprint * 0.6 + this.swayX * 0.05 + kickYaw * 0.03 * (1 - ads * 0.9) + tilt * 0.55,
       tilt * 0.5 + sprint * 0.3,
     );
     this.rig.rotation.x += HIP_PITCH * (1 - ads);

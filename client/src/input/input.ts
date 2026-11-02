@@ -13,7 +13,13 @@ export interface InputSnapshot {
   stance: Stance;
 }
 
-export const LOOK = { mouseRadPerPx: 0.0022, touchRadPerPx: 0.0058, adsScale: 0.6 };
+/**
+ * adsScale: aiming zooms the world from 75° to 58° (~1.38×), so the same finger movement crosses more of the
+ * magnified picture. 0.6 left the sight at ~83 % of the hip screen speed (felt unstable on the Seeker); 0.45 gives
+ * ~62 %, steadier on a small red dot. See input.test.ts.
+ */
+export const LOOK = { mouseRadPerPx: 0.0022, touchRadPerPx: 0.0058, adsScale: 0.45 };
+export const WORLD_FOV = { hip: 75, ads: 58 } as const;
 
 export class InputManager {
   private keys = new Set<string>();
