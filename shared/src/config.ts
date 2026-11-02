@@ -63,10 +63,10 @@ export const PENDING_DEFAULTS: PendingDefaults = {
 /**
  * Daily Pass RPC. The game first calls the project's own RPC proxy (server/, Cloudflare Worker:
  * method allowlist + rate limit, upstream URL kept as a Worker secret), then the public mainnet
- * endpoint. PENDING: proxyUrl stays null until the owner approves the Worker deploy + domain.
+ * endpoint. Deployed 2026-11-02 with the owner's approval on the workers.dev address.
  */
 export const PASS_RPC = {
-  proxyUrl: null as string | null,
+  proxyUrl: 'https://seek-and-strike-server.4n0nym0u5-cyber.workers.dev/rpc' as string | null,
   publicFallback: 'https://api.mainnet-beta.solana.com',
 } as const;
 
@@ -79,7 +79,7 @@ export function passRpcEndpoints(): string[] {
  * null hides the online button. The server refuses everyone until it can verify the Daily Pass itself.
  */
 export const ONLINE = {
-  wsUrl: null as string | null,
+  wsUrl: 'wss://seek-and-strike-server.4n0nym0u5-cyber.workers.dev' as string | null,
   defaultRoom: 'lobby-1',
   /** Quick match: rooms lobby-1..lobby-N are tried in order until one has a free seat. */
   quickMatchRooms: 8,

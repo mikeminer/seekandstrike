@@ -1,10 +1,10 @@
-# PLACEHOLDER - NOT DEPLOYED. Do not run `wrangler deploy` without owner approval.
+# Deployed on the owner's approval (2026-11-02) to the workers.dev address. Redeploys still need the owner's ok.
 # Free plan: Durable Objects must use the SQLite storage backend (new_sqlite_classes).
 name = "seek-and-strike-server"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
-workers_dev = false
-# routes / custom domain: pending (owner domain not yet chosen)
+workers_dev = true
+# Custom domain: none yet (owner chose workers.dev on 2026-11-02).
 
 [[durable_objects.bindings]]
 name = "MATCH_ROOM"
